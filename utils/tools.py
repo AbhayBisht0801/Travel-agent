@@ -15,6 +15,7 @@ import re
 import os
 import json
 import time
+from datetime import datetime
 search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
 load_dotenv()
@@ -305,3 +306,48 @@ def check_airport(station: str, place: str) -> str:
     """)
     
     return response.content
+@tool
+def planning(arrival_date:str,departure_date:str,place:str)->str:
+    """Input date should be of format yyy-mm-dd of arrival_date and departure_date and place name as input 
+     return what ever is the function output """
+    try:
+        date_format = '%Y-%m-%d'
+        start_date = datetime.strptime(arrival_date,date_format)
+        end_date = datetime.strptime(departure_date,date_format)
+        days = (end_date-start_date).days
+        
+        print(f"days are {days}")
+        prompt = f"""
+            You are a travel planner, and I need your help in planning a {days}-day trip to {place}.  
+
+            ### **Task 1: Identify Tourist Attractions**  
+            Find only those places in {place} that are **within a 40 km radius**.  
+            Use **Google Maps or any other real-world travel logic** to ensure places are correctly grouped based on distance.  
+
+            ### **Task 2: Create a Travel Plan (Grouped by Proximity)**  
+            Plan the trip such that places **closest to each other** are visited on the same day.  
+            For example, if **two places are within 5 km of each other**, they **must be scheduled together** on the same day.  
+
+            **⚠ Important Constraints:**  
+            - Do **NOT** list places far from each other on the same day.  
+            - If **distance information is unavailable**, assume **logical groupings based on common travel routes**.  
+
+            ### **Response Format (Follow This Exactly)**  
+            {place} Trip Plan for {days} Days  
+
+            - **Day 1**: List of places (should be close to each other).
+            ---place name: details 
+            ..... 
+            - **Day 2**: Another set of places (also close to each other).
+            ---place name: details.
+            ...............  
+            *(Continue for all {days} days.)*  
+
+            Now, generate the best **optimized itinerary** using this information.
+            """
+        response = llm.invoke(prompt)
+        
+        
+        return response.content 
+    except Exception as e:
+        return f"Error: {e}"

@@ -28,7 +28,7 @@ llm = ChatCohere()
 
 # Bind tools to LLM
 
-if __name__=="__main__":
+def plane_scrape(text):
     llm_with_tools = llm.bind_tools(tools=[check_airport, scrape_plane])
 
 
@@ -45,4 +45,4 @@ if __name__=="__main__":
             res = llm_with_tools.invoke(messages)
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
-    print(res.content)
+    return res.content

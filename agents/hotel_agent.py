@@ -34,7 +34,7 @@ def hotel_agent(text:str):
 
 
     # Main execution
-    messages = [HumanMessage(content="Book me hotel from 26 Feb to 28 Feb 2025 in Mangalore")]
+    messages = [HumanMessage(content=text)]
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
