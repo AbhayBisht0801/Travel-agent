@@ -174,24 +174,58 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
             # Function to close any pop-up if it appears
     print(len(hotel_name),len(hotel_type),len(area_name))
     return df
+
+
 @tool
-def check_train_station(place_name: str) -> str:
- 
-    service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))    
-    driver = webdriver.Edge(service=service)
-    
-    driver.get(f"https://trainspy.com/nearestrailwaystations/{place_name}")
-    time.sleep(5)
+def extract_train(query: str)->str:
+    """Extract cities from the query and fetch their nearest train stations."""
+    nlp = spacy.load("en_core_web_sm")
 
-    table = driver.find_element(By.ID, "trains")
-    first_row = table.find_elements(By.TAG_NAME, "tr")[1]  # First row after header
+    train_station = []
+    lock = threading.Lock()  # Prevent race conditions
 
-    # Extract data from the first row
-    row_data = [cell.text for cell in first_row.find_elements(By.TAG_NAME, "td")]
-    # print("First row data:", row_data)
+    def station_check(city):
+        """Fetch the nearest railway station for a given city from trainspy.com."""
+        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\USER\\Downloads\\edgedriver_win64\\msedgedriver.exe"))
+        driver = webdriver.Edge(service=service)
+
+        try:
+            driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
+            time.sleep(1)
+
+            table = driver.find_element(By.ID, "trains")
+            first_row = table.find_elements(By.TAG_NAME, "tr")[1]  # First row after header
+            row_data = [cell.text for cell in first_row.find_elements(By.TAG_NAME, "td")]
+
+            with lock:
+                train_station.append(row_data[0])
+
+        except Exception as e:
+            print(f"Error fetching station for {city}: {e}")
+
+        finally:
+            driver.quit()
+
+    # Extract cities from the query
+    doc = nlp(query)
+    cities = [ent.text for ent in doc.ents if ent.label_ == "GPE"]
+
+    print(f"Cities detected: {cities}")
+
+    if len(cities) < 2:
+        print("Not enough cities found in query!")
+        return
+
+    # Create and start threads
+    threads = [threading.Thread(target=station_check, args=(city,)) for city in cities]
     
-    driver.quit()
-    return row_data[0]
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    return train_station 
 
 
 @tool
