@@ -177,55 +177,66 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
 
 @tool
-def extract_train(query: str)->str:
-    """Extract cities from the query and fetch their nearest train stations."""
-    nlp = spacy.load("en_core_web_sm")
-
-    train_station = []
+def extract_train(departure:str, arrival):
+    """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
+    
+    departure_stations = []
+    arrival_stations = []
     lock = threading.Lock()  # Prevent race conditions
 
-    def station_check(city):
-        """Fetch the nearest railway station for a given city from trainspy.com."""
+    def station_check(city, station_list):
+        """Fetch all train stations for a given city from trainspy.com."""
         service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\USER\\Downloads\\edgedriver_win64\\msedgedriver.exe"))
         driver = webdriver.Edge(service=service)
 
         try:
             driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
-            time.sleep(1)
+            time.sleep(2)
 
             table = driver.find_element(By.ID, "trains")
-            first_row = table.find_elements(By.TAG_NAME, "tr")[1]  # First row after header
-            row_data = [cell.text for cell in first_row.find_elements(By.TAG_NAME, "td")]
+            time.sleep(1)
+            rows = table.find_elements(By.TAG_NAME, "tr")[1:]  # Skip header row
+
+            city_stations = []
+            for row in rows:
+                row_data = [cell.text for cell in row.find_elements(By.TAG_NAME, "td")]
+                if row_data:  # Ensure non-empty rows
+                    city_stations.append(row_data)
 
             with lock:
-                train_station.append(row_data[0])
+                station_list.extend(city_stations)
 
         except Exception as e:
-            print(f"Error fetching station for {city}: {e}")
+            print(f"Error fetching stations for {city}: {e}")
 
         finally:
             driver.quit()
 
-    # Extract cities from the query
-    doc = nlp(query)
-    cities = [ent.text for ent in doc.ents if ent.label_ == "GPE"]
+    # Create and start threads for both cities
+    threads = [
+        threading.Thread(target=station_check, args=(departure, departure_stations)),
+        threading.Thread(target=station_check, args=(arrival, arrival_stations)),
+    ]
 
-    print(f"Cities detected: {cities}")
-
-    if len(cities) < 2:
-        print("Not enough cities found in query!")
-        return
-
-    # Create and start threads
-    threads = [threading.Thread(target=station_check, args=(city,)) for city in cities]
-    
     for thread in threads:
         thread.start()
 
     for thread in threads:
         thread.join()
 
-    return train_station 
+    # Convert lists into separate Pandas DataFrames
+    departure_df = pd.DataFrame(departure_stations, columns=["Station Name", "Code", "Distance (km)"])
+    arrival_df = pd.DataFrame(arrival_stations, columns=["Station Name", "Code", "Distance (km)"])
+
+    # Convert 'Code' column to numeric for sorting
+    departure_df["Code"] = pd.to_numeric(departure_df["Code"], errors='coerce')
+    arrival_df["Code"] = pd.to_numeric(arrival_df["Code"], errors='coerce')
+
+    # Find station name where 'Code' is maximum
+    max_departure_station = departure_df.loc[departure_df["Code"].idxmax(), "Station Name"] if not departure_df.empty else None
+    max_arrival_station = arrival_df.loc[arrival_df["Code"].idxmax(), "Station Name"] if not arrival_df.empty else None
+
+    return max_departure_station, max_arrival_station
 
 
 @tool
