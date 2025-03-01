@@ -175,8 +175,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
     print(len(hotel_name),len(hotel_type),len(area_name))
     return df
 @tool
-def extract_train(place_name:str)->str:
-
+def check_train_station(place_name: str) -> str:
  
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))    
     driver = webdriver.Edge(service=service)
