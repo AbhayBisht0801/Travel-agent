@@ -1,8 +1,9 @@
-from utils.tools import bus_details,bus_place,check_train_station,scrape_train,scrape_plane,hotel_data,check_airport
+from utils.tools import bus_details,bus_place,check_train_station,scrape_train,scrape_plane,hotel_data,check_airport,planning
 
 from langchain_core.messages import HumanMessage, ToolMessage
 def invoke_tools(tool_calls, messages):
     for tool_call in tool_calls:
+        print(tool_call)
         tool_name = tool_call["name"]
         tool_args = tool_call["args"]
 
@@ -21,6 +22,9 @@ def invoke_tools(tool_calls, messages):
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
         elif tool_name == "scrape_train":
             tool_output = scrape_train.invoke(tool_args)
+            messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+        elif tool_name == "planning":
+            tool_output = planning.invoke(tool_args)
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
         
 
@@ -44,5 +48,6 @@ def invoke_tools(tool_calls, messages):
             # Call the tool using .invoke() with a single dictionary argument
             tool_output = hotel_data.invoke(tool_args)
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+
     return messages
 

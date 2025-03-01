@@ -15,6 +15,7 @@ import re
 import os
 import json
 import time
+from datetime import datetime
 search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
 load_dotenv()
@@ -174,27 +175,23 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
     print(len(hotel_name),len(hotel_type),len(area_name))
     return df
 @tool
-def check_train_station(place: str) -> str:
-    """Find the nearby railway station from current place"""
-   
+def check_train_station(place_name: str) -> str:
+ 
+    service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))    
+    driver = webdriver.Edge(service=service)
     
-    search_result = search.invoke(f"what is the nearest  active railway station for in {place}?")
-    print(search_result)
-    response = llm.invoke(f"""
-    Find the nearby railway station to {place} from this information:
-    {search_result}
-    
-    Return only the nearest railway station  with its station code.
-    Eg:
-    Human message:
-    By Train. Chikmagalur has it is own railway station (CMGR) but is well connected to other nearby cities like Bangalore, Chennai, and Mangalore. Therefore, Kadur (45 KM), Hassan (56 KM), and Birur (51 KM) are the nearest railway stations to Chikmagalur. Both passenger and express trains are plying frequently between Bangalore or Chennai to Kadur. Although Chikmagalur does not have a railway station of its own, the nearest railway station is in Kadur, located approximately 40 kilometers away. 
-    If you are wondering how to reach Chikmagalur by train, you will have to book train tickets from your city to Kadur. From Kadur, you can hire a taxi or take a local bus to reach Chikmagalur. 
-    AI message:
-    Chilmagalur Railway Station (CMGR)
+    driver.get(f"https://trainspy.com/nearestrailwaystations/{place_name}")
+    time.sleep(5)
 
-    """)
-    print(response.content)
-    return response.content
+    table = driver.find_element(By.ID, "trains")
+    first_row = table.find_elements(By.TAG_NAME, "tr")[1]  # First row after header
+
+    # Extract data from the first row
+    row_data = [cell.text for cell in first_row.find_elements(By.TAG_NAME, "td")]
+    # print("First row data:", row_data)
+    
+    driver.quit()
+    return row_data[0]
 
 
 @tool
@@ -305,3 +302,48 @@ def check_airport(station: str, place: str) -> str:
     """)
     
     return response.content
+@tool
+def planning(arrival_date:str,departure_date:str,place:str)->str:
+    """Input date should be of format yyy-mm-dd of arrival_date and departure_date and place name as input 
+     return what ever is the function output """
+    try:
+        date_format = '%Y-%m-%d'
+        start_date = datetime.strptime(arrival_date,date_format)
+        end_date = datetime.strptime(departure_date,date_format)
+        days = (end_date-start_date).days
+        
+        print(f"days are {days}")
+        prompt = f"""
+            You are a travel planner, and I need your help in planning a {days}-day trip to {place}.  
+
+            ### **Task 1: Identify Tourist Attractions**  
+            Find only those places in {place} that are **within a 40 km radius**.  
+            Use **Google Maps or any other real-world travel logic** to ensure places are correctly grouped based on distance.  
+
+            ### **Task 2: Create a Travel Plan (Grouped by Proximity)**  
+            Plan the trip such that places **closest to each other** are visited on the same day.  
+            For example, if **two places are within 5 km of each other**, they **must be scheduled together** on the same day.  
+
+            **⚠ Important Constraints:**  
+            - Do **NOT** list places far from each other on the same day.  
+            - If **distance information is unavailable**, assume **logical groupings based on common travel routes**.  
+
+            ### **Response Format (Follow This Exactly)**  
+            {place} Trip Plan for {days} Days  
+
+            - **Day 1**: List of places (should be close to each other).
+            ---place name: details 
+            ..... 
+            - **Day 2**: Another set of places (also close to each other).
+            ---place name: details.
+            ...............  
+            *(Continue for all {days} days.)*  
+
+            Now, generate the best **optimized itinerary** using this information.
+            """
+        response = llm.invoke(prompt)
+        
+        
+        return response.content 
+    except Exception as e:
+        return f"Error: {e}"
