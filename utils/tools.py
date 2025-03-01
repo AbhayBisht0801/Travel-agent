@@ -4,11 +4,13 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from selenium import webdriver
 from utils.common import bus_url
 from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.common import hotel_url
 import pandas as pd
+import numpy as np
 from selenium.webdriver.common.keys import Keys
 from utils.common import clean_train_details,extract_train_schedule
 import re
@@ -19,6 +21,7 @@ from datetime import datetime
 search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
 load_dotenv()
+import threading
 llm = ChatCohere()
 
 
@@ -38,7 +41,9 @@ def bus_details(arrival_location:str,departure_location:str,date:str) ->str :
     
     # url=get_bus_url(departure_location,arrival_location)
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))
-    driver = webdriver.Edge(service=service)
+    edge_options = Options()
+    edge_options.add_argument("--headless")
+    driver = webdriver.Edge(service=service,options=edge_options)
     # Navigate to the page with the input field
     url=bus_url(departure_location,arrival_location)
     url=re.sub('\d{2}-\d{2}-\d{4}',date,url)
@@ -136,7 +141,9 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
         service = Service(r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe")
 
         # Use the Edge WebDriver
-    driver = webdriver.Edge(service=service)
+    edge_options = Options()
+    edge_options.add_argument("--headless")
+    driver = webdriver.Edge(service=service,options=edge_options)
 
     # Maximize the window
     driver.maximize_window()
@@ -177,7 +184,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
 
 @tool
-def extract_train(departure:str, arrival):
+def check_train_station(departure:str, arrival):
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
     
     departure_stations = []
@@ -187,7 +194,9 @@ def extract_train(departure:str, arrival):
     def station_check(city, station_list):
         """Fetch all train stations for a given city from trainspy.com."""
         service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\USER\\Downloads\\edgedriver_win64\\msedgedriver.exe"))
-        driver = webdriver.Edge(service=service)
+        edge_options = Options()
+        edge_options.add_argument("--headless")
+        driver = webdriver.Edge(service=service,options=edge_options)
 
         try:
             driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
@@ -247,7 +256,10 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date: s
     Return both the cheapest flight in terms of time and price"""
     
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))
-    driver = webdriver.Edge(service=service)
+    
+    edge_options = Options()
+    edge_options.add_argument("--headless")
+    driver = webdriver.Edge(service=service,options=edge_options)
     
     try:
         driver.get(f'https://www.cleartrip.com/flights/results?adults={adults}&childs={child}&infants={infant}&class=Economy&depart_date={date}&from={departure_airport_code}&to={arrival_airport_code}&intl=n')
@@ -294,7 +306,9 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
 
         # Use the Edge WebDriver
     train_details=[]
-    driver = webdriver.Edge(service=service)
+    edge_options = Options()
+    edge_options.add_argument("--headless")
+    driver = webdriver.Edge(service=service,options=edge_options)
     print(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
     driver.get(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
     wait = WebDriverWait(driver, 15)
