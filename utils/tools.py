@@ -346,4 +346,7 @@ def planning(arrival_date:str,departure_date:str,place:str)->str:
         
         return response.content 
     except Exception as e:
+
+
+        
         return f"Error: {e}"
