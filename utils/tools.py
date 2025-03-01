@@ -175,27 +175,24 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
     print(len(hotel_name),len(hotel_type),len(area_name))
     return df
 @tool
-def check_train_station(place: str) -> str:
-    """Find the nearby railway station from current place"""
-   
-    
-    search_result = search.invoke(f"what is the nearest  active railway station for in {place}?")
-    print(search_result)
-    response = llm.invoke(f"""
-    Find the nearby railway station to {place} from this information:
-    {search_result}
-    
-    Return only the nearest railway station  with its station code.
-    Eg:
-    Human message:
-    By Train. Chikmagalur has it is own railway station (CMGR) but is well connected to other nearby cities like Bangalore, Chennai, and Mangalore. Therefore, Kadur (45 KM), Hassan (56 KM), and Birur (51 KM) are the nearest railway stations to Chikmagalur. Both passenger and express trains are plying frequently between Bangalore or Chennai to Kadur. Although Chikmagalur does not have a railway station of its own, the nearest railway station is in Kadur, located approximately 40 kilometers away. 
-    If you are wondering how to reach Chikmagalur by train, you will have to book train tickets from your city to Kadur. From Kadur, you can hire a taxi or take a local bus to reach Chikmagalur. 
-    AI message:
-    Chilmagalur Railway Station (CMGR)
+def extract_train(place_name:str)->str:
 
-    """)
-    print(response.content)
-    return response.content
+ 
+    service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))    
+    driver = webdriver.Edge(service=service)
+    
+    driver.get(f"https://trainspy.com/nearestrailwaystations/{place_name}")
+    time.sleep(5)
+
+    table = driver.find_element(By.ID, "trains")
+    first_row = table.find_elements(By.TAG_NAME, "tr")[1]  # First row after header
+
+    # Extract data from the first row
+    row_data = [cell.text for cell in first_row.find_elements(By.TAG_NAME, "td")]
+    # print("First row data:", row_data)
+    
+    driver.quit()
+    return row_data[0]
 
 
 @tool
