@@ -29,7 +29,7 @@ llm = ChatCohere()
 # print(hotel_data('Mangalore',num_adult=1,rooms=1,check_in='26-02-2025',check_out='29-02-2025',num_childrens=2,children_age=[10,8]))
 
             
-def hotel_agent(text:str):
+def hotel_agent(text:str)->str:
     llm_with_tools = llm.bind_tools(tools=[hotel_data])
 
 

@@ -27,13 +27,18 @@ llm = ChatCohere()
 
 
 # Bind tools to LLM
-
-def plane_scrape(text):
+@tool
+def plane_agent(text:str)->str:
+    """The input should as below 
+    Eg:
+    find me a flight from mumbai to bangalore  on 5 March 2025 
+    Return the output from the tool as it is
+    """
     llm_with_tools = llm.bind_tools(tools=[check_airport, scrape_plane])
 
 
 # Main execution
-    messages = [HumanMessage(content="Find me a best plane in terms of time and price from Bangalore to Mumbai on 26 february 2025")]
+    messages = [HumanMessage(content=text)]
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)

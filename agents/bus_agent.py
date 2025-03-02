@@ -1,12 +1,12 @@
 import os
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, ToolMessage
-from utils.tools_caller import invoke_tools
+
 from langchain_core.tools import tool
 from langchain_cohere import ChatCohere
 from langchain_community.tools import DuckDuckGoSearchRun
 from selenium import webdriver
-from check_bus import bus_url
+from utils.tools_caller import invoke_tools
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -25,19 +25,31 @@ llm = ChatCohere()
 
 
 
+def invoke_tools(tool_calls, messages):
+    for tool_call in tool_calls:
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
 
+        if tool_name == "bus_place":
+            tool_output = bus_place(tool_args)
+            messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+        elif tool_name == "bus_details":
+            tool_output = bus_details.invoke(tool_args)
+            messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+    return messages
 
-def bus_agent(text:str):
+def bus_agent(text):
     llm_with_tools = llm.bind_tools(tools=[bus_place, bus_details])
 
 
     # Main execution
-    messages = [HumanMessage(content="Find me a best Bus in terms of time and price from Mumbai to Pune on 26 february 2025")]
+    messages = [HumanMessage(content=text)]
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
 
     while res.tool_calls:
+        print(res)
         messages.append(res)
         messages = invoke_tools(res.tool_calls, messages)
         try:

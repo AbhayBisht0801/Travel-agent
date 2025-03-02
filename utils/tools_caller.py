@@ -10,6 +10,7 @@ def invoke_tools(tool_calls, messages):
         if tool_name == "bus_place":
             tool_output = bus_place(tool_args)
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+        
         elif tool_name == "bus_details":
             tool_output = bus_details.invoke(tool_args)
         elif tool_name == "check_train_station":
@@ -50,4 +51,5 @@ def invoke_tools(tool_calls, messages):
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
 
     return messages
+
 

@@ -41,9 +41,7 @@ def bus_details(arrival_location:str,departure_location:str,date:str) ->str :
     
     # url=get_bus_url(departure_location,arrival_location)
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))
-    edge_options = Options()
-    edge_options.add_argument("--headless")
-    driver = webdriver.Edge(service=service,options=edge_options)
+    driver = webdriver.Edge(service=service)
     # Navigate to the page with the input field
     url=bus_url(departure_location,arrival_location)
     url=re.sub('\d{2}-\d{2}-\d{4}',date,url)
@@ -110,6 +108,7 @@ def bus_details(arrival_location:str,departure_location:str,date:str) ->str :
 
         
         return df.to_json(orient='split')
+
 @tool
 def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list):
     '''It Returns the hotel available in the Place entered
@@ -184,7 +183,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
 
 @tool
-def check_train_station(departure:str, arrival):
+def check_train_station(departure:str, arrival:str)->str:
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
     
     departure_stations = []
@@ -193,7 +192,7 @@ def check_train_station(departure:str, arrival):
 
     def station_check(city, station_list):
         """Fetch all train stations for a given city from trainspy.com."""
-        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\USER\\Downloads\\edgedriver_win64\\msedgedriver.exe"))
+        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe"))
         edge_options = Options()
         edge_options.add_argument("--headless")
         driver = webdriver.Edge(service=service,options=edge_options)
@@ -244,7 +243,8 @@ def check_train_station(departure:str, arrival):
     # Find station name where 'Code' is maximum
     max_departure_station = departure_df.loc[departure_df["Code"].idxmax(), "Station Name"] if not departure_df.empty else None
     max_arrival_station = arrival_df.loc[arrival_df["Code"].idxmax(), "Station Name"] if not arrival_df.empty else None
-
+    max_departure_station=matches = re.findall(r'\((.*?)\)', max_departure_station)
+    max_arrival_station=matches = re.findall(r'\((.*?)\)', max_arrival_station)
     return max_departure_station, max_arrival_station
 
 
@@ -301,45 +301,48 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
     date_of_departure :  Date of departure format ('dd-mm-yyyy) 
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
-    
-    service = Service(r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe")
+    try:
+        service = Service(r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe")
 
-        # Use the Edge WebDriver
-    train_details=[]
-    edge_options = Options()
-    edge_options.add_argument("--headless")
-    driver = webdriver.Edge(service=service,options=edge_options)
-    print(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
-    driver.get(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
-    wait = WebDriverWait(driver, 15)
-    train_rows = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'train')))
+            # Use the Edge WebDriver
+        train_details=[]
+        edge_options = Options()
+        edge_options.add_argument("--headless")
+        driver = webdriver.Edge(service=service,options=edge_options)
+        print(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
+        driver.get(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
+        wait = WebDriverWait(driver, 15)
+        train_rows = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'train')))
 
-    train_det=[]
-    for train in train_rows:
-        train_name=train.find_element(By.CLASS_NAME,'name')
-        
-        
-        train_details=train.find_element(By.CLASS_NAME,'trainTime')
-        train_travel_details=extract_train_schedule(train_details.text)
-        
-
-        train_price=train.find_element(By.CLASS_NAME,"react-horizontal-scrolling-menu--inner-wrapper")
-       
-        train_detail=clean_train_details(train_price.text)
-        temp_seat=[]
-        temp_price=[]
-        temp_availability=[]
-        for i in train_detail:
+        train_det=[]
+        for train in train_rows:
+            train_name=train.find_element(By.CLASS_NAME,'name')
             
-            temp_seat.append(i[0])
-            temp_price.append(i[1])
-            temp_availability.append(i[2])
+            
+            train_details=train.find_element(By.CLASS_NAME,'trainTime')
+            train_travel_details=extract_train_schedule(train_details.text)
+            
+
+            train_price=train.find_element(By.CLASS_NAME,"react-horizontal-scrolling-menu--inner-wrapper")
         
-        train_det.append({train_name.text:{'seat_type':temp_seat,'prices':temp_price,'availbilty':temp_availability,
-                                        'departure_time':train_travel_details[0],'departure_station':train_travel_details[1],'arrival_time':train_travel_details[-2],'arrival_departure':train_travel_details[-1],'travel_time':train_travel_details[2]}})
-    time.sleep(2)
-    driver.quit()    
-    return train_det
+            train_detail=clean_train_details(train_price.text)
+            temp_seat=[]
+            temp_price=[]
+            temp_availability=[]
+            for i in train_detail:
+                
+                temp_seat.append(i[0])
+                temp_price.append(i[1])
+                temp_availability.append(i[2])
+            
+            train_det.append({train_name.text:{'seat_type':temp_seat,'prices':temp_price,'availbilty':temp_availability,
+                                            'departure_time':train_travel_details[0],'departure_station':train_travel_details[1],'arrival_time':train_travel_details[-2],'arrival_departure':train_travel_details[-1],'travel_time':train_travel_details[2]}})
+        time.sleep(2)
+        driver.quit()    
+        return train_det
+    except Exception as e:
+        return 'No trains Available'
+
 @tool
 def check_airport(station: str, place: str) -> str:
     """Find the nearby airport  from  current place"""
