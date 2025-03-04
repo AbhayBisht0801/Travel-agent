@@ -9,7 +9,7 @@ from langchain_core.runnables import RunnableParallel
 load_dotenv()
 llm=ChatCohere()
 
-def ticketing_agent(text:HumanMessage)->RunnableParallel:
+def ticketing_agent(text:HumanMessage)->str:
     llm_with_tools = llm.bind_tools(tools=[bus_agent,train_agent])
 
 

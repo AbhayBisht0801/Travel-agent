@@ -40,8 +40,12 @@ def invoke_tools(tool_calls, messages):
             tool_output = bus_details.invoke(tool_args)
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
     return messages
-
-def bus_agent(text):
+@tool
+def bus_agent(text:str)->str:
+    """
+    This tool take input from user like
+    Eg:
+    I want to book a bus from mumbai to bangalore on 26 march 2025"""
     llm_with_tools = llm.bind_tools(tools=[bus_place, bus_details])
 
 

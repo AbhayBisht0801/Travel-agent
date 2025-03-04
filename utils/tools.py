@@ -18,6 +18,7 @@ import os
 import json
 import time
 from datetime import datetime
+from utils.common import  bus_data
 search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
 load_dotenv()
@@ -34,80 +35,33 @@ def bus_place(place: str) -> str:
     
 
 
-@tool
-def bus_details(arrival_location:str,departure_location:str,date:str) ->str :
+
+def bus_details(arrival_location:str,departure_location:str,arrival_date:str,return_ticket:bool,departure_date:str) ->str :
     """Fetches available bus details between the given departure and arrival locations for the specified date.
-    Date should be of format dd-mm-yyyy"""
+    Date should be of format dd-mm-yyyy.
+    If a personal asks for return ticket the departure _location becomes the arrival_location and the departure_location becomes the arrival_location
+    This tool return the best bus both in terms of time and price """
     
     # url=get_bus_url(departure_location,arrival_location)
-    service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))
-    driver = webdriver.Edge(service=service)
-    # Navigate to the page with the input field
-    url=bus_url(departure_location,arrival_location)
-    url=re.sub('\d{2}-\d{2}-\d{4}',date,url)
-    driver.get(url)
-    wait = WebDriverWait(driver, 15)
-    columns = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@id, 'service-container')]")))
-    busname=[]
-    departureplace=[]
-    arrivalplace=[]
-    departure_time=[]
-    arrival_time=[]
-    total_time=[]
-    bus_type=[]
-    print('scrape kar raha')
-    if len(columns)>50:
-
-        for i in range(0,30):
-            
-            busname.append(columns[i].find_element(By.CLASS_NAME,'title').text)
-            departureplace.append(columns[i].find_element(By.CSS_SELECTOR, ".source-name.text-grey.text-sm.col.auto").text)
-            arrivalplace.append(columns[i].find_element(By.CSS_SELECTOR, ".destination-name.text-grey.text-sm.col.auto").text)
-            bus_type.append(columns[i].find_element(By.CLASS_NAME,'sub-title').text)
-            arrival_time.append(columns[i].find_element(By.CSS_SELECTOR,'span.arrival-time').text)
-            departure_time.append(columns[i].find_element(By.CSS_SELECTOR,'span.departure-time').text)
-            total_time.append(columns[i].find_element(By.CSS_SELECTOR, ".chip.tertiary.outlined.sm.travel-time.col.auto").text)
-
+    
+    if return_ticket==False:
+        url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
+        url=re.sub('\d{2}-\d{2}-\d{4}',arrival_date,url)
         
-        
-        data=driver.find_elements(By.XPATH, "//*[starts-with(@id, 'service-operator-fare-info-')]")
-        price=[i.text.split('\n')[1] for i in data ]
-        price=price[:30]
-        Seats=[int(i.text.split('\n')[-1].split()[0]) for i in data ]
-        Seats=Seats[:30]
-        print('ho gaya scrape')
-        driver.quit()
-        df=pd.DataFrame({'bus_name':busname,'departureplace':departureplace,'arrivalplace':arrivalplace,'bus_type':bus_type,'departure_time':departure_time,'arrival_time':arrival_time,'total_time':total_time,'price':price,'Seats_available':Seats})
-        
-
-
-        
-        return df.to_json(orient='split')
+        data=bus_data(url=url)
+        return data
     else:
-        for i in columns:
-            
-            busname.append(i.find_element(By.CLASS_NAME,'title').text)
-            departureplace.append(i.find_element(By.CSS_SELECTOR, ".source-name.text-grey.text-sm.col.auto").text)
-            arrivalplace.append(i.find_element(By.CSS_SELECTOR, ".destination-name.text-grey.text-sm.col.auto").text)
-            bus_type.append(i.find_element(By.CLASS_NAME,'sub-title').text)
-            arrival_time.append(i.find_element(By.CSS_SELECTOR,'span.arrival-time').text)
-            departure_time.append(i.find_element(By.CSS_SELECTOR,'span.departure-time').text)
-            total_time.append(i.find_element(By.CSS_SELECTOR, ".chip.tertiary.outlined.sm.travel-time.col.auto").text)
-
-        
-        
-        data=driver.find_elements(By.XPATH, "//*[starts-with(@id, 'service-operator-fare-info-')]")
-        price=[i.text.split('\n')[1] for i in data ]
-        
-        Seats=[int(i.text.split('\n')[-1].split()[0]) for i in data ]
-
-        driver.quit()
-        df=pd.DataFrame({'bus_name':busname,'departureplace':departureplace,'arrivalplace':arrivalplace,'bus_type':bus_type,'departure_time':departure_time,'arrival_time':arrival_time,'total_time':total_time,'price':price,'Seats_available':Seats})
+        url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
+        url=re.sub('\d{2}-\d{2}-\d{4}',arrival_date,url)
+        url1=bus_url(departure_place=arrival_location,arrival_place=departure_location)
+        url1=re.sub('\d{2}-\d{2}-\d{4}',departure_date,url1)
+        source_depature_data=bus_data(url=url)
+        destination_depature_data=bus_data(url=url1)
+        return source_depature_data,destination_depature_data
         
 
 
-        
-        return df.to_json(orient='split')
+    
 
 @tool
 def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list):
@@ -174,13 +128,16 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
     print(df)
 
 
-    #Function to close any pop-up if it appears
+
+
+
+            # Function to close any pop-up if it appears
     print(len(hotel_name),len(hotel_type),len(area_name))
     return df
 
 
 @tool
-def check_train_station(departure:str, arrival:str):
+def check_train_station(departure:str, arrival:str)->str:
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
     
     departure_stations = []
@@ -189,16 +146,16 @@ def check_train_station(departure:str, arrival:str):
 
     def station_check(city, station_list):
         """Fetch all train stations for a given city from trainspy.com."""
-        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\USER\Downloads\\edgedriver_win64\\msedgedriver.exe"))
-        driver = webdriver.Edge(service=service)
+        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe"))
+        edge_options = Options()
+        edge_options.add_argument("--headless")
+        driver = webdriver.Edge(service=service,options=edge_options)
 
         try:
             driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
             time.sleep(2)
 
-            table = driver.find_elements(By.ID, "trains")
-            table = table[1]
-            print(table)
+            table = driver.find_element(By.ID, "trains")
             time.sleep(1)
             rows = table.find_elements(By.TAG_NAME, "tr")[1:]  # Skip header row
 
@@ -230,19 +187,18 @@ def check_train_station(departure:str, arrival:str):
         thread.join()
 
     # Convert lists into separate Pandas DataFrames
-    departure_df = pd.DataFrame(departure_stations, columns=["Station Name", "Code", "Distance"])
-    arrival_df = pd.DataFrame(arrival_stations, columns=["Station Name", "Code", "Distance"])
-    departure_df["Distance"] = departure_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
-    arrival_df["Distance"] = arrival_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
-    print('arrival is ', arrival_df['Distance'])
+    departure_df = pd.DataFrame(departure_stations, columns=["Station Name", "Code", "Distance (km)"])
+    arrival_df = pd.DataFrame(arrival_stations, columns=["Station Name", "Code", "Distance (km)"])
+
     # Convert 'Code' column to numeric for sorting
     departure_df["Code"] = pd.to_numeric(departure_df["Code"], errors='coerce')
     arrival_df["Code"] = pd.to_numeric(arrival_df["Code"], errors='coerce')
 
     # Find station name where 'Code' is maximum
-    max_departure_station = departure_df.loc[departure_df["Distance"].idxmin(), "Station Name"] if not departure_df.empty else None
-    max_arrival_station = arrival_df.loc[arrival_df["Distance"].idxmin(), "Station Name"] if not arrival_df.empty else None
-
+    max_departure_station = departure_df.loc[departure_df["Code"].idxmax(), "Station Name"] if not departure_df.empty else None
+    max_arrival_station = arrival_df.loc[arrival_df["Code"].idxmax(), "Station Name"] if not arrival_df.empty else None
+    max_departure_station=matches = re.findall(r'\((.*?)\)', max_departure_station)
+    max_arrival_station=matches = re.findall(r'\((.*?)\)', max_arrival_station)
     return max_departure_station, max_arrival_station
 
 
