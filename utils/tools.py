@@ -12,7 +12,7 @@ from utils.common import hotel_url
 import pandas as pd
 import numpy as np
 from selenium.webdriver.common.keys import Keys
-from utils.common import clean_train_details,extract_train_schedule
+from utils.common import clean_train_details,extract_train_schedule,bus_data,extract_station_code,available_ticket_check
 import re
 import os
 import json
@@ -36,8 +36,8 @@ def bus_place(place: str) -> str:
     
 
 
-
-def bus_details(arrival_location:str,departure_location:str,arrival_date:str,return_ticket:bool,departure_date:str) ->str :
+@tool
+def bus_details(arrival_location:str,departure_location:str,arrival_date:str,return_ticket:bool,departure_date:str) ->json :
     """Fetches available bus details between the given departure and arrival locations for the specified date.
     Date should be of format dd-mm-yyyy.
     If a personal asks for return ticket the departure _location becomes the arrival_location and the departure_location becomes the arrival_location
@@ -50,6 +50,7 @@ def bus_details(arrival_location:str,departure_location:str,arrival_date:str,ret
         url=re.sub('\d{2}-\d{2}-\d{4}',arrival_date,url)
         
         data=bus_data(url=url)
+        
         return data
     else:
         url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
@@ -91,10 +92,12 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 # Replace values using regex
     for key, value in replacements.items():
         url = re.sub(rf'(?<=\b{key}=)[^&]+', value, url)
-        print(url)
-        service = Service(r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe")
+        
+        service = Service(r"msedgedriver.exe")
+    print(url)
 
         # Use the Edge WebDriver
+        
     edge_options = Options()
     edge_options.add_argument("--headless")
     driver = webdriver.Edge(service=service,options=edge_options)
@@ -104,29 +107,32 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
     # Open the desired website
     driver.get(url)
-    body = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.TAG_NAME, 'body'))
-    )
-    last_height = driver.execute_script("return document.body.scrollHeight")
 
-    for _ in range(15):
-        body.send_keys(Keys.PAGE_DOWN)  # Simulate the PAGE_DOWN keypress
-        # Wait for a moment to let the page load
-    time.sleep(5)
-    hotel_details = driver.find_elements(By.CSS_SELECTOR,"div.sc-fPXMVe.bFeVmI")
-
+   
+    hotel_details = WebDriverWait(driver, 10).until(
+    EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.sc-fPXMVe.bFeVmI"))
+)
+    hotel_det=driver.find_elements(By.CSS_SELECTOR,'div.sc-aXZVg.gvuMKO.c-pointer.p-relative')
+    hotel_rating = [
+    hotel_det[i].text.split('\n')[1]
+    if hotel_det[i].text.split('\n')[1].replace('.', '', 1).isdigit() 
+    else np.nan 
+    for i in range(len(hotel_det))
+]    
     hotel_name=[hotel_details[i].text for i in range(len(hotel_details)) if i%2==0]
     hotel_type=[hotel_details[i].text.split('·')[0] for i in range(len(hotel_details)) if i%2!=0]
     area_name=[hotel_details[i].text.split('·')[1] for i in range(len(hotel_details)) if i%2!=0]
     price=driver.find_elements(By.CSS_SELECTOR,'p.sc-fqkvVR.dVmisQ')
+    
     prices=[i.text for i in price]
-    data={'hotel_name':hotel_name,'price':prices,'area_name':area_name,'hotel_type':hotel_type}
+    print(prices)
+    data={'hotel_name':hotel_name,'price':prices,'area_name':area_name,'hotel_type':hotel_type,'hotel_rating':hotel_rating}
     max_length = max(len(v) for v in data.values())
     for key, value in data.items():
         while len(value) < max_length:
             value.append(np.nan) 
     df=pd.DataFrame(data)
-    print(df)
+    
 
 
 
@@ -138,7 +144,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
 
 @tool
-def check_train_station(departure:str, arrival:str):
+def check_train_station(departure:str, arrival:str)->tuple:
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
     
     departure_stations = []
@@ -147,7 +153,7 @@ def check_train_station(departure:str, arrival:str):
 
     def station_check(city, station_list):
         """Fetch all train stations for a given city from trainspy.com."""
-        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\USER\Downloads\\edgedriver_win64\\msedgedriver.exe"))
+        service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
         driver = webdriver.Edge(service=service)
 
         try:
@@ -200,8 +206,9 @@ def check_train_station(departure:str, arrival:str):
     # Find station name where 'Code' is maximum
     max_departure_station = departure_df.loc[departure_df["Distance"].idxmin(), "Station Name"] if not departure_df.empty else None
     max_arrival_station = arrival_df.loc[arrival_df["Distance"].idxmin(), "Station Name"] if not arrival_df.empty else None
-
-    return max_departure_station, max_arrival_station
+    departure_station_code=extract_station_code(max_departure_station)
+    arrival_station_code=extract_station_code(max_arrival_station)
+    return departure_station_code, arrival_station_code
 
 
 @tool
@@ -211,7 +218,7 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date: s
     date: Date of departure format ('dd/mm/yyyy) and return the best flights
     Return both the cheapest flight in terms of time and price"""
     
-    service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))
+    service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
     
     edge_options = Options()
     edge_options.add_argument("--headless")
@@ -251,25 +258,22 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date: s
 def scrape_train(departure_station_code: str, arrival_station_code: str, date_of_departure: str) -> str:
     """ Scrape trains from confirm it based on input parameters
     take the railway station code that is in the ( )
-    Eg:
-    Manglore Jn (MAJN) 
-    here MAJN is the input
+    
     date_of_departure :  Date of departure format ('dd-mm-yyyy) 
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
     try:
-        service = Service(r"C:\\Users\\USER\\Downloads\\edgedriver_win64\\msedgedriver.exe")
+        service = Service(r"msedgedriver.exe")
 
             # Use the Edge WebDriver
         train_details=[]
-        edge_options = Options()
-        edge_options.add_argument("--headless")
-        driver = webdriver.Edge(service=service,options=edge_options)
+        
+        driver = webdriver.Edge(service=service)
         print(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
         driver.get(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
         wait = WebDriverWait(driver, 15)
         train_rows = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'train')))
-
+        print([i.text for i in train_rows])
         train_det=[]
         for train in train_rows:
             train_name=train.find_element(By.CLASS_NAME,'name')
@@ -286,21 +290,30 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
             temp_price=[]
             temp_availability=[]
             for i in train_detail:
+                if len(i)!=1:
                 
-                temp_seat.append(i[0])
-                temp_price.append(i[1])
-                temp_availability.append(i[2])
+                
+                    temp_seat.append(i[0])
+                    temp_price.append(i[1])
+                    if len(i)==2:
+                        temp_availability.append('NO Chance')
+                    else:
+                        temp_availability.append(i[2])
             
             train_det.append({train_name.text:{'seat_type':temp_seat,'prices':temp_price,'availbilty':temp_availability,
                                             'departure_time':train_travel_details[0],'departure_station':train_travel_details[1],'arrival_time':train_travel_details[-2],'arrival_departure':train_travel_details[-1],'travel_time':train_travel_details[2]}})
         time.sleep(2)
         driver.quit()    
-        return train_det
+        train_det=available_ticket_check(train_det)
+        if len(train_det)==0:
+            return 'No trains are available'
+        else:
+            return train_det
     except Exception as e:
         return 'No trains Available {e}'
 
 @tool
-def check_airport(station: str, place: str) -> str:
+def check_airport(place: str) -> str:
     """Find the nearby airport  from  current place"""
    
     

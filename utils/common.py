@@ -6,6 +6,9 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options
+import pandas as pd
 import os
 def clean_train_details(text,chunk_size=3):
     pattern = r"\d{2}% Chance"
@@ -63,8 +66,10 @@ def hotel_url(Place_name):
         print(f"Error: {e}")
     place_input = driver.find_element(By.CSS_SELECTOR, "input.sc-ikkxIA.jLQbRg")
     place_input.click()
-    place_input.send_keys(Place_name)
-    time.sleep(5)
+    for i in Place_name:
+        time.sleep(0.2)
+        place_input.send_keys(i)
+    time.sleep(1)
     place_input.send_keys(Keys.DOWN)
     time.sleep(1)
     place_input.send_keys(Keys.ENTER)
@@ -80,7 +85,7 @@ def hotel_url(Place_name):
     driver.quit()
     return driver_url
 def bus_url(departure_place,arrival_place):
-    service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\Users\bisht\Downloads\edgedriver_win64\msedgedriver.exe"))
+    service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
     driver = webdriver.Edge(service=service)
     # Navigate to the page with the input field
     driver.get('https://www.abhibus.com/')
@@ -114,3 +119,87 @@ def bus_url(departure_place,arrival_place):
     # Close the browser when done
     driver.quit()
     return url
+def bus_data(url):
+    service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
+    driver = webdriver.Edge(service=service)
+    driver.get(url)
+    wait = WebDriverWait(driver, 15)
+    columns = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@id, 'service-container')]")))
+    busname=[]
+    departureplace=[]
+    arrivalplace=[]
+    departure_time=[]
+    arrival_time=[]
+    total_time=[]
+    bus_type=[]
+    print('scrape kar raha')
+    if len(columns)>50:
+
+        for i in range(0,30):
+            
+            busname.append(columns[i].find_element(By.CLASS_NAME,'title').text)
+            departureplace.append(columns[i].find_element(By.CSS_SELECTOR, ".source-name.text-grey.text-sm.col.auto").text)
+            arrivalplace.append(columns[i].find_element(By.CSS_SELECTOR, ".destination-name.text-grey.text-sm.col.auto").text)
+            bus_type.append(columns[i].find_element(By.CLASS_NAME,'sub-title').text)
+            arrival_time.append(columns[i].find_element(By.CSS_SELECTOR,'span.arrival-time').text)
+            departure_time.append(columns[i].find_element(By.CSS_SELECTOR,'span.departure-time').text)
+            total_time.append(columns[i].find_element(By.CSS_SELECTOR, ".chip.tertiary.outlined.sm.travel-time.col.auto").text)
+
+        
+        
+        data=driver.find_elements(By.XPATH, "//*[starts-with(@id, 'service-operator-fare-info-')]")
+        price=[i.text.split('\n')[1] for i in data ]
+        price=price[:30]
+        Seats=[int(i.text.split('\n')[-1].split()[0]) for i in data ]
+        Seats=Seats[:30]
+        print('ho gaya scrape')
+        driver.quit()
+        df=pd.DataFrame({'bus_name':busname,'departureplace':departureplace,'arrivalplace':arrivalplace,'bus_type':bus_type,'departure_time':departure_time,'arrival_time':arrival_time,'total_time':total_time,'price':price,'Seats_available':Seats})
+        df=df.sort_values(by=['total_time','Seats_available','price'],ascending=[True,False,True])
+        top_3=df.head(3)
+        
+
+
+        
+        return top_3.to_json(orient='split')
+    else:
+        for i in columns:
+            
+            busname.append(i.find_element(By.CLASS_NAME,'title').text)
+            departureplace.append(i.find_element(By.CSS_SELECTOR, ".source-name.text-grey.text-sm.col.auto").text)
+            arrivalplace.append(i.find_element(By.CSS_SELECTOR, ".destination-name.text-grey.text-sm.col.auto").text)
+            bus_type.append(i.find_element(By.CLASS_NAME,'sub-title').text)
+            arrival_time.append(i.find_element(By.CSS_SELECTOR,'span.arrival-time').text)
+            departure_time.append(i.find_element(By.CSS_SELECTOR,'span.departure-time').text)
+            total_time.append(i.find_element(By.CSS_SELECTOR, ".chip.tertiary.outlined.sm.travel-time.col.auto").text)
+
+        
+        
+        data=driver.find_elements(By.XPATH, "//*[starts-with(@id, 'service-operator-fare-info-')]")
+        price=[i.text.split('\n')[1] for i in data ]
+        
+        Seats=[int(i.text.split('\n')[-1].split()[0]) for i in data ]
+
+        driver.quit()
+        df=pd.DataFrame({'bus_name':busname,'departureplace':departureplace,'arrivalplace':arrivalplace,'bus_type':bus_type,'departure_time':departure_time,'arrival_time':arrival_time,'total_time':total_time,'price':price,'Seats_available':Seats})
+        df=df.sort_values(by=['total_time','Seats_available','price'],ascending=[True,False,True])
+        top_3=df.head(3)
+        
+
+
+        
+        return top_3.to_json(orient='split')
+
+
+        
+def extract_station_code(station):
+    match = re.search(r"\((.*?)\)", station)
+
+    if match:
+        return match.group(1)
+def available_ticket_check(text):
+    result= [i for i in text for j in i.values() if any('AVAILABLE' in k for k in j.get('availbilty', []))]
+    return sorted(result, key=lambda x: next(iter(x.values()))['travel_time'])
+
+
+    

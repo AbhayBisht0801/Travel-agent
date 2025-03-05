@@ -33,11 +33,11 @@ llm = ChatCohere()
 
 # Initial Message
 @tool
-def train_agent(text:str)->str:
+def train_agent(text:str)->json:
     """The input should as below 
     Eg:
     find me a train from mumbai to bangalore  on 5 March 2025 
-    Return the output from the tool as it is
+    This tool returns all the train details
     """
     llm_with_tools = llm.bind_tools([check_train_station, scrape_train])
 

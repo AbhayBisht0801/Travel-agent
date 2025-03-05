@@ -51,7 +51,7 @@ def bus_agent(text:str)->str:
 
     # Main execution
     messages = [HumanMessage(content=text)]
-
+    print(messages)
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
 
