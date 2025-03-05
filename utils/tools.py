@@ -18,12 +18,13 @@ import os
 import json
 import time
 from datetime import datetime
-from utils.common import  bus_data
+# from utils.common import  bus_data
 search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
 load_dotenv()
 import threading
-llm = ChatCohere()
+api_key = os.getenv('CO_API_KEY')
+llm = ChatCohere(cohere_api_key= api_key)
 
 
 @tool
@@ -137,7 +138,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
 
 @tool
-def check_train_station(departure:str, arrival:str)->str:
+def check_train_station(departure:str, arrival:str):
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
     
     departure_stations = []
@@ -146,16 +147,16 @@ def check_train_station(departure:str, arrival:str)->str:
 
     def station_check(city, station_list):
         """Fetch all train stations for a given city from trainspy.com."""
-        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe"))
-        edge_options = Options()
-        edge_options.add_argument("--headless")
-        driver = webdriver.Edge(service=service,options=edge_options)
+        service = Service(os.getenv("EDGE_DRIVER_PATH", r"C:\\Users\\USER\Downloads\\edgedriver_win64\\msedgedriver.exe"))
+        driver = webdriver.Edge(service=service)
 
         try:
             driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
             time.sleep(2)
 
-            table = driver.find_element(By.ID, "trains")
+            table = driver.find_elements(By.ID, "trains")
+            table = table[1]
+            print(table)
             time.sleep(1)
             rows = table.find_elements(By.TAG_NAME, "tr")[1:]  # Skip header row
 
@@ -187,18 +188,19 @@ def check_train_station(departure:str, arrival:str)->str:
         thread.join()
 
     # Convert lists into separate Pandas DataFrames
-    departure_df = pd.DataFrame(departure_stations, columns=["Station Name", "Code", "Distance (km)"])
-    arrival_df = pd.DataFrame(arrival_stations, columns=["Station Name", "Code", "Distance (km)"])
-
+    departure_df = pd.DataFrame(departure_stations, columns=["Station Name", "Code", "Distance"])
+    arrival_df = pd.DataFrame(arrival_stations, columns=["Station Name", "Code", "Distance"])
+    departure_df["Distance"] = departure_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
+    arrival_df["Distance"] = arrival_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
+    print('arrival is ', arrival_df['Distance'])
     # Convert 'Code' column to numeric for sorting
     departure_df["Code"] = pd.to_numeric(departure_df["Code"], errors='coerce')
     arrival_df["Code"] = pd.to_numeric(arrival_df["Code"], errors='coerce')
 
     # Find station name where 'Code' is maximum
-    max_departure_station = departure_df.loc[departure_df["Code"].idxmax(), "Station Name"] if not departure_df.empty else None
-    max_arrival_station = arrival_df.loc[arrival_df["Code"].idxmax(), "Station Name"] if not arrival_df.empty else None
-    max_departure_station=matches = re.findall(r'\((.*?)\)', max_departure_station)
-    max_arrival_station=matches = re.findall(r'\((.*?)\)', max_arrival_station)
+    max_departure_station = departure_df.loc[departure_df["Distance"].idxmin(), "Station Name"] if not departure_df.empty else None
+    max_arrival_station = arrival_df.loc[arrival_df["Distance"].idxmin(), "Station Name"] if not arrival_df.empty else None
+
     return max_departure_station, max_arrival_station
 
 
@@ -256,7 +258,7 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
     try:
-        service = Service(r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe")
+        service = Service(r"C:\\Users\\USER\\Downloads\\edgedriver_win64\\msedgedriver.exe")
 
             # Use the Edge WebDriver
         train_details=[]
@@ -295,7 +297,7 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
         driver.quit()    
         return train_det
     except Exception as e:
-        return 'No trains Available'
+        return 'No trains Available {e}'
 
 @tool
 def check_airport(station: str, place: str) -> str:
