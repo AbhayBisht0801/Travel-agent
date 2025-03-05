@@ -29,5 +29,5 @@ def ticketing_agent(text:HumanMessage)->str:
             res = llm_with_tools.invoke(messages)
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
-    print(res.content)
-    return res
+    
+    return res.content
