@@ -41,11 +41,12 @@ def invoke_tools(tool_calls, messages):
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
     return messages
 @tool
-def bus_agent(text:str)->str:
+def bus_agent(text:str)->dict:
     """
     This tool take input from user like
     Eg:
-    I want to book a bus from mumbai to bangalore on 26 march 2025"""
+    I want to book a bus from mumbai to bangalore on 26 march 2025
+    Returns the output as it is from bus_details """
     llm_with_tools = llm.bind_tools(tools=[bus_place, bus_details])
 
 
@@ -63,4 +64,4 @@ def bus_agent(text:str)->str:
             res = llm_with_tools.invoke(messages)
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
-    print(res.content)
+    return res.content

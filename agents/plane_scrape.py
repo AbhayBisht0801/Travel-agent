@@ -15,10 +15,12 @@ import json
 from utils.tools import check_airport,scrape_plane
 
 load_dotenv()
+from langchain_ollama import OllamaLLM
 
 # Initialize tools and LLM
 search = DuckDuckGoSearchRun()
-llm = ChatCohere()
+
+llm = OllamaLLM(model="gemma2:2b")
 
 
 

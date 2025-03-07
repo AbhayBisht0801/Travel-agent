@@ -8,3 +8,4 @@ pandas
 langchain-cohere
 langchain-core
 python-dotenv
+langchain_ollama

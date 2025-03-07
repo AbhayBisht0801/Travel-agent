@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import json
 import time
 from utils.tools import scrape_train,check_train_station
-from utils.tools_caller import invoke_tools
+
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +21,24 @@ load_dotenv()
 # Initialize tools and LLM
 search = DuckDuckGoSearchRun()
 llm = ChatCohere()
+def invoke_tools(tool_calls, messages):
+    for tool_call in tool_calls:
+        print(tool_call)
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
+
+        
+        if tool_name == "check_train_station":
+
+            tool_output = check_train_station.invoke(tool_args)
+            messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+
+        elif tool_name == "scrape_train":
+            tool_output = scrape_train.invoke(tool_args)
+            messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+       
+
+    return messages
 
 
 

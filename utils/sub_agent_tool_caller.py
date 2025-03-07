@@ -1,6 +1,7 @@
 from agents.bus_agent import bus_agent
 from agents.train_agent import train_agent
 from agents.plane_scrape import plane_agent
+from utils.tools import combine_output
 from langchain_core.messages import HumanMessage, ToolMessage
 
 def sub_agent_invoke_tools(tool_calls, messages):
@@ -15,6 +16,8 @@ def sub_agent_invoke_tools(tool_calls, messages):
             tool_output = bus_agent(tool_args)
         elif tool_name == "train_agent":
             tool_output = train_agent(tool_args)
+        elif tool_output=='combine_output':
+            tool_output = combine_output(tool_args)
         else:
             continue  # Skip unknown tool calls
 

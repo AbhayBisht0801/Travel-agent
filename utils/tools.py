@@ -12,7 +12,7 @@ from utils.common import hotel_url
 import pandas as pd
 import numpy as np
 from selenium.webdriver.common.keys import Keys
-from utils.common import clean_train_details,extract_train_schedule,bus_data,extract_station_code,available_ticket_check
+from utils.common import clean_train_details,extract_train_schedule,bus_data,extract_station_code,available_ticket_check,airport_name
 import re
 import os
 import json
@@ -23,8 +23,11 @@ search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
 load_dotenv()
 import threading
-api_key = os.getenv('CO_API_KEY')
-llm = ChatCohere(cohere_api_key= api_key)
+# api_key = os.getenv('CO_API_KEY')
+# llm = ChatCohere(cohere_api_key= api_key)
+from langchain_ollama import OllamaLLM
+
+llm = OllamaLLM(model="gemma2:2b")
 
 
 @tool
@@ -41,7 +44,9 @@ def bus_details(arrival_location:str,departure_location:str,arrival_date:str,ret
     """Fetches available bus details between the given departure and arrival locations for the specified date.
     Date should be of format dd-mm-yyyy.
     If a personal asks for return ticket the departure _location becomes the arrival_location and the departure_location becomes the arrival_location
-    This tool return the best bus both in terms of time and price """
+    This tool return the best bus both in terms of time and price.
+     Note: if  the tool   'No buses available' which mean no buses are available. 
+      so dont call the tool again. """
     
     # url=get_bus_url(departure_location,arrival_location)
     
@@ -313,26 +318,16 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
         return 'No trains Available {e}'
 
 @tool
-def check_airport(place: str) -> str:
-    """Find the nearby airport  from  current place"""
+def check_airport(departure_place: str,arrival_place:str) -> str:
+    """Find the nearby airport  for both departure_place and arrival_place"""
+    departure_place=airport_name(departure_place)
+    arrival_place=airport_name(arrival_place)
+    return departure_place,arrival_place
    
     
-    search_result = search.invoke(f"what is the nearest commercial active airport for in {place}?")
     
-    response = llm.invoke(f"""
-    Find the nearby airport to {place} from this information:
-    {search_result}
     
-    Return only the nearest airport with its airport/station code.
-    Eg:
-    Human message:
-    By Place. Surathkal has does not have airport. The nearby airport to surathkal is Mangalore Airport Bejpai (IXE)
-    AI message:
-    Mangalore Airport(IXE)
-
-    """)
     
-    return response.content
 @tool
 def planning(arrival_date:str,departure_date:str,place:str)->str:
     """Input date should be of format yyy-mm-dd of arrival_date and departure_date and place name as input 
@@ -378,3 +373,7 @@ def planning(arrival_date:str,departure_date:str,place:str)->str:
         return response.content 
     except Exception as e:        
         return f"Error: {e}"
+@tool
+def combine_output(bus_result:str,plane_result:str,train_result:str)->str:
+    """Input bus_result,plane_result,train_result as string and return the combined output """
+    return 'Bus Tickets'+'\n'+bus_result+'+\n'+'Plane Tickets'+'\n'+plane_result+'\n'+'Train Tickets'+'\n'+train_result
