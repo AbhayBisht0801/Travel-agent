@@ -12,7 +12,7 @@ from utils.common import hotel_url
 import pandas as pd
 import numpy as np
 from selenium.webdriver.common.keys import Keys
-from utils.common import clean_train_details,extract_train_schedule,bus_data,extract_station_code,available_ticket_check,airport_name
+from utils.common import bus_data,extract_station_code,airport_name,plane_data,train_data
 import re
 import os
 import json
@@ -40,17 +40,18 @@ def bus_place(place: str) -> str:
 
 
 @tool
-def bus_details(arrival_location:str,departure_location:str,arrival_date:str,return_ticket:bool,departure_date:str) ->json :
+def bus_details(arrival_location:str,departure_location:str,arrival_date:str,round_ticket:bool,departure_date:str) ->json :
     """Fetches available bus details between the given departure and arrival locations for the specified date.
     Date should be of format dd-mm-yyyy.
     If a personal asks for return ticket the departure _location becomes the arrival_location and the departure_location becomes the arrival_location
     This tool return the best bus both in terms of time and price.
-     Note: if  the tool   'No buses available' which mean no buses are available. 
-      so dont call the tool again. """
+     Note: if  it returns  'No buses available' 
+      so dont call this tool again. 
+    Note: round_ticket is TRUE only done when the input mentions it or if its a complete travel plan"""
     
     # url=get_bus_url(departure_location,arrival_location)
     
-    if return_ticket==False:
+    if round_ticket==False:
         url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
         url=re.sub('\d{2}-\d{2}-\d{4}',arrival_date,url)
         
@@ -64,7 +65,7 @@ def bus_details(arrival_location:str,departure_location:str,arrival_date:str,ret
         url1=re.sub('\d{2}-\d{2}-\d{4}',departure_date,url1)
         source_depature_data=bus_data(url=url)
         destination_depature_data=bus_data(url=url1)
-        return source_depature_data,destination_depature_data
+        return {'departure_ticket':source_depature_data,'return_ticket':destination_depature_data}
         
 
 
@@ -217,105 +218,38 @@ def check_train_station(departure:str, arrival:str)->tuple:
 
 
 @tool
-def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date: str, adults: str, child: str, infant: str) -> json:
+def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date: str, adults: str, child: str, infant: str,round_trip:bool) -> json:
     """Scrapes flight details from Cleartrip based on input parameters.
     take the airport code that is in (Code)
     date: Date of departure format ('dd/mm/yyyy) and return the best flights
-    Return both the cheapest flight in terms of time and price"""
-    
-    service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
-    
-    edge_options = Options()
-    edge_options.add_argument("--headless")
-    driver = webdriver.Edge(service=service,options=edge_options)
-    
-    try:
-        driver.get(f'https://www.cleartrip.com/flights/results?adults={adults}&childs={child}&infants={infant}&class=Economy&depart_date={date}&from={departure_airport_code}&to={arrival_airport_code}&intl=n')
+    Return both the cheapest flight in terms of time and price
+    Note: round_ticket is TRUE only done when the input mentions it or if its a complete travel plan"""
+    if round_trip:
+        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant)
+        data1=plane_data(adults=adults,departure_airport_code=arrival_airport_code,arrival_airport_code=departure_airport_code,child=child,infant=infant)
+        return {'Departing ticket':data,'return_ticket':data1}
         
-        wait = WebDriverWait(driver, 15)
-        plane_name = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'p.fw-500.fs-2.c-neutral-900')))
+    else:
+        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant)
+        return data
+        
 
-        total_time = driver.find_elements(By.CSS_SELECTOR, "p.m-0.fs-2.fw-400.c-neutral-400.ta-center.lh-copy")
-        arrival_departure_time = driver.find_elements(By.CSS_SELECTOR, 'p.m-0.fs-5.fw-400.c-neutral-900')
-        number_of_stops = driver.find_elements(By.CSS_SELECTOR, 'p.m-0.fs-2.c-neutral-400.lh-copy')
-        ticket_price = driver.find_elements(By.CSS_SELECTOR, 'p.m-0.fs-5.fw-700.c-neutral-900.ta-right.false')
-
-        data = {
-            "Plane Name": [i.text for i in plane_name],
-            "Total Time": [i.text for i in total_time],
-            "Arrival Time": [arrival_departure_time[i].text for i in range(0, len(arrival_departure_time), 2)],
-            "Departure Time": [arrival_departure_time[i].text for i in range(1, len(arrival_departure_time), 2)],
-            "Number of Stops": [number_of_stops[i].text for i in range(1, len(number_of_stops), 2)],
-            "Ticket Price": [i.text for i in ticket_price],
-        }
-        df=pd.DataFrame(data)
-        best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1).to_json()
-        best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1).to_json()
-        print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')
-        return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}'
-
-    except Exception as e:
-        return f"Error: {str(e)}"
     
-    finally:
-        driver.quit()
+   
 @tool
-def scrape_train(departure_station_code: str, arrival_station_code: str, date_of_departure: str) -> str:
+def scrape_train(departure_station_code: str, arrival_station_code: str, date_of_departure: str,round_trip:bool) -> str:
     """ Scrape trains from confirm it based on input parameters
     take the railway station code that is in the ( )
     
     date_of_departure :  Date of departure format ('dd-mm-yyyy) 
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
-    try:
-        service = Service(r"msedgedriver.exe")
+    if round_trip:
+        data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+        data1=train_data(departure_station_code=arrival_station_code,arrival_station_code=departure_station_code,date_of_departure=date_of_departure)
 
-            # Use the Edge WebDriver
-        train_details=[]
-        
-        driver = webdriver.Edge(service=service)
-        print(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
-        driver.get(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
-        wait = WebDriverWait(driver, 15)
-        train_rows = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'train')))
-        print([i.text for i in train_rows])
-        train_det=[]
-        for train in train_rows:
-            train_name=train.find_element(By.CLASS_NAME,'name')
-            
-            
-            train_details=train.find_element(By.CLASS_NAME,'trainTime')
-            train_travel_details=extract_train_schedule(train_details.text)
-            
-
-            train_price=train.find_element(By.CLASS_NAME,"react-horizontal-scrolling-menu--inner-wrapper")
-        
-            train_detail=clean_train_details(train_price.text)
-            temp_seat=[]
-            temp_price=[]
-            temp_availability=[]
-            for i in train_detail:
-                if len(i)!=1:
-                
-                
-                    temp_seat.append(i[0])
-                    temp_price.append(i[1])
-                    if len(i)==2:
-                        temp_availability.append('NO Chance')
-                    else:
-                        temp_availability.append(i[2])
-            
-            train_det.append({train_name.text:{'seat_type':temp_seat,'prices':temp_price,'availbilty':temp_availability,
-                                            'departure_time':train_travel_details[0],'departure_station':train_travel_details[1],'arrival_time':train_travel_details[-2],'arrival_departure':train_travel_details[-1],'travel_time':train_travel_details[2]}})
-        time.sleep(2)
-        driver.quit()    
-        train_det=available_ticket_check(train_det)
-        if len(train_det)==0:
-            return 'No trains are available'
-        else:
-            return train_det
-    except Exception as e:
-        return 'No trains Available {e}'
+        return {'Departing ticket':data,'return ticket':data1}
+    
 
 @tool
 def check_airport(departure_place: str,arrival_place:str) -> str:

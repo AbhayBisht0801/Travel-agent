@@ -46,7 +46,8 @@ def bus_agent(text:str)->dict:
     This tool take input from user like
     Eg:
     I want to book a bus from mumbai to bangalore on 26 march 2025
-    Returns the output as it is from bus_details """
+    Returns the output as it is from bus_details.
+    """
     llm_with_tools = llm.bind_tools(tools=[bus_place, bus_details])
 
 
@@ -57,7 +58,7 @@ def bus_agent(text:str)->dict:
     res = llm_with_tools.invoke(messages)
 
     while res.tool_calls:
-        print(res)
+        
         messages.append(res)
         messages = invoke_tools(res.tool_calls, messages)
         try:
