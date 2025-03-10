@@ -1,7 +1,6 @@
 from agents.plane_scrape import plane_agent
 from agents.bus_agent import bus_agent
-from agents.hotel_agent import hotel_agent
-from agents.travelguide_agent import travel_guide
+
 from agents.train_agent import train_agent
 from langchain_cohere import ChatCohere
 from dotenv import load_dotenv
@@ -12,11 +11,11 @@ from langchain_core.runnables import RunnableParallel
 from langchain.tools import tool
 import os
 load_dotenv()
-api_key = os.getenv('CO_AP_KEY')
-llm = ChatCohere(cohere_api_key = api_key)
+
+llm = ChatCohere()
 
 
-@tool
+
 def ticketing_agent(text:str)->dict:
     '''you are an ticketting agent'''
     llm_with_tools = llm.bind_tools(tools=[bus_agent,train_agent,combine_output])

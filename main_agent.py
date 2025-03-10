@@ -54,7 +54,7 @@ def fun(text: str):
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
     raw_response = llm.invoke(prompt)
-
+    
     print(f"Raw response: {raw_response}")  
     json_response = extract_json(raw_response)
     if not json_response:
@@ -88,4 +88,4 @@ def fun(text: str):
     print(f"Time taken: {time.time() - start_time:.2f} seconds")
 
 # Example usage
-# fun("Plan my trip from Bangalore to Mangalore from 19/3/2025 to 22/3/2025")
+print(fun("Plan my trip from Bangalore to Mangalore from 19/3/2025 to 22/3/2025"))

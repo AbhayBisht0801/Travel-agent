@@ -14,9 +14,6 @@ from langchain_cohere import ChatCohere
 from langchain_community.tools import DuckDuckGoSearchRun
 search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
-load_dotenv()
-api_key = os.getenv('CO_AP_KEY')
-llm = ChatCohere(cohere_api_key= api_key)
 
 def clean_train_details(text,chunk_size=3):
     pattern = r"\d{2}% Chance"
