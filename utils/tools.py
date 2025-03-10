@@ -23,11 +23,11 @@ search = DuckDuckGoSearchRun()
 from dotenv import load_dotenv
 load_dotenv()
 import threading
-# api_key = os.getenv('CO_API_KEY')
-# llm = ChatCohere(cohere_api_key= api_key)
-from langchain_ollama import OllamaLLM
+api_key = os.getenv('CO_AP_KEY')
+llm = ChatCohere(cohere_api_key= api_key)
+# from langchain_ollama import OllamaLLM
 
-llm = OllamaLLM(model="gemma2:2b")
+# llm = OllamaLLM(model="gemma2:2b")
 
 
 @tool
@@ -311,3 +311,4 @@ def planning(arrival_date:str,departure_date:str,place:str)->str:
 def combine_output(bus_result:str,plane_result:str,train_result:str)->str:
     """Input bus_result,plane_result,train_result as string and return the combined output """
     return 'Bus Tickets'+'\n'+bus_result+'+\n'+'Plane Tickets'+'\n'+plane_result+'\n'+'Train Tickets'+'\n'+train_result
+

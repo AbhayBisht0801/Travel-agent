@@ -20,11 +20,14 @@ import re
 from utils.tools import bus_place,bus_details
 load_dotenv()
 
-
-
+api_key = os.getenv('CO_AP_KEY')
+llm = ChatCohere(cohere_api_key = api_key)
+# from langchain_groq import ChatGroq
+# os.environ["GROQ_API_KEY"] =os.getenv('groq_api')
+# llm = ChatGroq(model_name="mixtral-8x7b-32768")
 # Initialize tools and LLM
 search = DuckDuckGoSearchRun()
-llm = ChatCohere()
+
 
 
 

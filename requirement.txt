@@ -6,6 +6,6 @@ duckduckgo-search
 selenium
 pandas
 langchain-cohere
-langchain-core
+piplangchain-core
 python-dotenv
 langchain_ollama

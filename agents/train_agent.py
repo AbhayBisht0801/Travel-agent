@@ -16,11 +16,11 @@ from utils.tools import scrape_train,check_train_station
 
 # Load environment variables
 load_dotenv()
-
+api_key = os.getenv('CO_AP_KEY')
+llm = ChatCohere(cohere_api_key = api_key)
 
 # Initialize tools and LLM
 search = DuckDuckGoSearchRun()
-llm = ChatCohere()
 def invoke_tools(tool_calls, messages):
     for tool_call in tool_calls:
         print(tool_call)

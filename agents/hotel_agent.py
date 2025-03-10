@@ -16,9 +16,10 @@ import pandas as pd
 import numpy as np
 from langchain_cohere import ChatCohere
 from dotenv import load_dotenv
+import os
 load_dotenv()
-
-llm = ChatCohere()
+api_key = os.getenv('CO_AP_KEY')
+llm = ChatCohere(cohere_api_key = api_key)
 # Specify the path to the Edge WebDriver executable
 
 
@@ -28,8 +29,9 @@ llm = ChatCohere()
 
 # print(hotel_data('Mangalore',num_adult=1,rooms=1,check_in='26-02-2025',check_out='29-02-2025',num_childrens=2,children_age=[10,8]))
 
-            
+@tool  
 def hotel_agent(text:str)->str:
+    """You are an agent who will suggest the hotels"""
     llm_with_tools = llm.bind_tools(tools=[hotel_data])
 
 

@@ -15,12 +15,13 @@ import json
 from utils.tools import check_airport,scrape_plane
 
 load_dotenv()
-from langchain_ollama import OllamaLLM
-
+# from langchain_ollama import OllamaLLM
+api_key = os.getenv('CO_AP_KEY')
+llm = ChatCohere(cohere_api_key = api_key)
 # Initialize tools and LLM
 search = DuckDuckGoSearchRun()
 
-llm = OllamaLLM(model="gemma2:2b")
+# llm = OllamaLLM(model="gemma2:2b")
 
 
 
