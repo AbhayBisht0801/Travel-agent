@@ -25,3 +25,26 @@ def sub_agent_invoke_tools(tool_calls, messages):
         messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
 
     return messages  # Ensure all tool calls are processed before returning
+
+
+
+def main_agent_invoke_tools(result,messages):
+    for tool_call in result.keys():
+        print(tool_call)
+        tool_name = tool_call
+        print(tool_name)
+        tool_args = result[tool_name]
+        print(tool_args)
+
+        if tool_name == "ticketing_agent":
+            tool_output = plane_agent(tool_args)
+        elif tool_name == "hotel_agent":
+            tool_output = bus_agent(tool_args)
+        elif tool_name == "tourist_guide":
+            tool_output = train_agent(tool_args)
+        else: 
+            continue
+
+        messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call))
+    return messages
+        

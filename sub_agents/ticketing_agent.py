@@ -12,7 +12,6 @@ from langchain.tools import tool
 import os
 load_dotenv()
 
-llm = ChatCohere()
 
 
 
