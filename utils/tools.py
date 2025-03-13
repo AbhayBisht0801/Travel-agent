@@ -246,6 +246,7 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
     """
     if round_trip:
         data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+    else:
         data1=train_data(departure_station_code=arrival_station_code,arrival_station_code=departure_station_code,date_of_departure=date_of_departure)
 
         return {'Departing ticket':data,'return ticket':data1}

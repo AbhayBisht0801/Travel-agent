@@ -16,7 +16,7 @@ from utils.tools import scrape_train,check_train_station
 
 # Load environment variables
 load_dotenv()
-api_key = os.getenv('CO_AP_KEY')
+api_key = os.getenv('CO_API_KEY')
 llm = ChatCohere(cohere_api_key = api_key)
 
 # Initialize tools and LLM
@@ -27,7 +27,7 @@ def invoke_tools(tool_calls, messages):
         tool_name = tool_call["name"]
         tool_args = tool_call["args"]
 
-        
+        print(tool_name)
         if tool_name == "check_train_station":
 
             tool_output = check_train_station.invoke(tool_args)
