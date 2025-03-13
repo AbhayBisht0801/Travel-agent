@@ -18,8 +18,8 @@ from langchain_cohere import ChatCohere
 from dotenv import load_dotenv
 import os
 load_dotenv()
-
-llm = ChatCohere()
+api_key = os.getenv('CO_API_KEY')
+llm = ChatCohere(cohere_api_key = api_key)
 # Specify the path to the Edge WebDriver executable
 
 
@@ -31,18 +31,22 @@ llm = ChatCohere()
 
 
 def hotel_agent(text:str)->dict:
-    """You are an agent who will suggest the hotels"""
+    """You are an agent who will suggest the hotels
+    if it is menctioned for one and no childrens are there then number of children take it as zero and age of children as zero"""
     
     llm_with_tools = llm.bind_tools(tools=[hotel_data])
     
 
-
+    print('text is:',text)
     # Main execution
-    messages = [SystemMessage(content='''return the output in a dictionary format '''),HumanMessage(content=text)]
+    messages = [SystemMessage(content='''Return the output in a dictionary format. 
+    If it is mentioned for one person and no details about children are provided, 
+    assume `children: 0` and `children_age: 0`. Do not ask for missing details.
+    '''),HumanMessage(content=text)]
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
-    
+    print('result is',res.content)
 
     while res.tool_calls:
         

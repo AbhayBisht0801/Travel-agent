@@ -13,7 +13,7 @@ import os
 load_dotenv()
 api_key = os.getenv('CO_API_KEY')
 llm = ChatCohere(cohere_api_key = api_key)
-llm=ChatCohere()
+# llm=ChatCohere()
 
 
 
