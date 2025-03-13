@@ -32,7 +32,7 @@ def invoke_tools(tool_calls, messages):
         elif tool_name == "scrape_plane":
             print(tool_args)
             # Ensure numeric values are converted to strings if needed.
-            tool_args["adults"] = str(tool_args["adults"])
+            tool_args["num_adults"] = str(tool_args["num_adults"])
             tool_args["child"] = str(tool_args["child"])
             tool_args["infant"] = str(tool_args["infant"])
             
@@ -42,8 +42,8 @@ def invoke_tools(tool_calls, messages):
         elif tool_name == "hotel_data":
             print(tool_args)
             # Ensure numeric values are converted to strings if needed.
-            tool_args["adults"] = int(tool_args["adults"])
-            tool_args["child"] = int(tool_args["child"])
+            tool_args["num_adult"] = int(tool_args["num_adult"])
+            tool_args["num_childrens"] = int(tool_args["num_childrens"])
             tool_args["children_age"] = list(tool_args["children_age"])
             
             # Call the tool using .invoke() with a single dictionary argument

@@ -149,7 +149,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
     return df
 
 
-@tool
+
 def check_train_station(departure:str, arrival:str)->tuple:
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
     
@@ -210,8 +210,9 @@ def check_train_station(departure:str, arrival:str)->tuple:
     arrival_df["Code"] = pd.to_numeric(arrival_df["Code"], errors='coerce')
 
     # Find station name where 'Code' is maximum
-    max_departure_station = departure_df.loc[departure_df["Distance"].idxmin(), "Station Name"] if not departure_df.empty else None
-    max_arrival_station = arrival_df.loc[arrival_df["Distance"].idxmin(), "Station Name"] if not arrival_df.empty else None
+    max_departure_station = departure_df.loc[departure_df["Distance"].idxmin(), "Station Name"].values if not departure_df.empty else None
+    max_arrival_station = arrival_df.loc[arrival_df["Distance"].idxmin(), "Station Name"].values if not arrival_df.empty else None
+    print(type(max_arrival_station),type(max_departure_station))
     departure_station_code=extract_station_code(max_departure_station)
     arrival_station_code=extract_station_code(max_arrival_station)
     return departure_station_code, arrival_station_code

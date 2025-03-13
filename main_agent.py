@@ -1,17 +1,17 @@
 from sub_agents.ticketing_agent import ticketing_agent
 from agents.hotel_agent import hotel_agent
-from agents.travelguide_agent import travel_guide
+from agents.travelguide_agent import tourist_guide
 from agents.train_agent import train_agent
 from agents.plane_scrape import plane_agent
 from agents.bus_agent import bus_agent
 from utils.tools import check_train_station, scrape_train, hotel_data
 from langchain_ollama import OllamaLLM
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 from typing import TypedDict,Annotated, Optional,Literal
 from dotenv import load_dotenv
 import os
 from langchain_cohere import ChatCohere
-from utils.sub_agent_tool_caller import main_agent_invoke_tools
+
 
 load_dotenv()
 import json
@@ -113,6 +113,7 @@ def fun(text: str)->dict:
 
     if data and "functions" in data:  # Check if "functions" key exists
         for function in data["functions"]:
+          
             function_name = function["function_name"]  # Extract function name
             function_text = function["function_params"]["text"]  # Extract text
             
@@ -120,11 +121,11 @@ def fun(text: str)->dict:
 
     print("Result is:", result)
     
-    res = main_agent_invoke_tools(result,messages)
+    res = main_agent_invoke_tools(result)
     print(res)
     
     
 
-print(fun("Book me a train from mangaluru to bengaluru on 19 march 2025"))
+print(fun("Find me a places to visit in Bangalore from 26th march to 27tgh march"))
 
 print(time.time()-t1)

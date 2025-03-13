@@ -12,7 +12,7 @@ llm = ChatCohere(cohere_api_key = api_key)
 
 
 
-def travel_guide(text:str)->str:
+def tourist_guide(text:str)->str:
     """ you are an travel guide"""
     llm_with_tools = llm.bind_tools([planning])
 
