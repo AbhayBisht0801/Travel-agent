@@ -172,7 +172,7 @@ def bus_data(url):
 
 
                 
-                return top_3.to_json(orient='split')
+                return top_3.to_dict(orient='records')
             
 
         else:
@@ -202,7 +202,7 @@ def bus_data(url):
 
 
                 
-                return top_3.to_json(orient='split')
+                return top_3.to_dict(orient='records')
             except Exception as e:
                 return 'No buses available'
     except Exception as e:

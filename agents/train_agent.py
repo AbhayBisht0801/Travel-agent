@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage,SystemMessage
 from langchain_core.tools import tool
 from langchain_cohere import ChatCohere
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -59,7 +59,8 @@ def train_agent(text:str)->json:
     """
     llm_with_tools = llm.bind_tools([check_train_station, scrape_train])
 
-    messages = [HumanMessage(content=text)]
+    messages = [SystemMessage(content='''Return the output in a dictionary format. 
+    If it is mentioned for one person and no  other details mentioned consider it for one person'''),HumanMessage(content=text)]
 
     res = llm_with_tools.invoke(messages)
 

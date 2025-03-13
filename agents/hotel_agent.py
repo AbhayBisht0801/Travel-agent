@@ -49,6 +49,7 @@ def hotel_agent(text:str)->dict:
     print('result is',res.content)
 
     while res.tool_calls:
+        print(res)
         
         messages.append(res)
         messages = invoke_tools(res.tool_calls, messages)
