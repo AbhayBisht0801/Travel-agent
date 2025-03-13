@@ -49,7 +49,7 @@ def extract_train_schedule(text):
     return result
 
 def hotel_url(Place_name):
-    service = Service(r"C:\\Users\\bisht\\Downloads\\edgedriver_win64\\msedgedriver.exe")
+    service = Service(r"msedgedriver.exe")
 
     # Use the Edge WebDriver
     driver = webdriver.Edge(service=service)
@@ -320,7 +320,7 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
         else:
             return train_det
     except Exception as e:
-        return 'No trains Available {e}'
+        return f'No trains Available {e}'
 
 
     

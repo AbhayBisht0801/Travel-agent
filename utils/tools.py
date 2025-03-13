@@ -31,16 +31,16 @@ llm = ChatCohere(cohere_api_key= api_key)
 
 
 @tool
-def bus_place(place: str) -> str:
+def bus_place(departure_place:str,arrival_place: str) -> str:
     """Returns the place name itself as the bus station without searching for nearby stations."""
     
-    return place 
+    return departure_place,arrival_place
 
     
 
 
 @tool
-def bus_details(arrival_location:str,departure_location:str,arrival_date:str,round_ticket:bool,departure_date:str) ->json :
+def bus_details(arrival_location:str,departure_location:str,arrival_date:str,round_ticket:bool,departure_date:str) ->dict :
     """Fetches available bus details between the given departure and arrival locations for the specified date.
     Date should be of format dd-mm-yyyy.
     If a personal asks for return ticket the departure _location becomes the arrival_location and the departure_location becomes the arrival_location
@@ -72,9 +72,9 @@ def bus_details(arrival_location:str,departure_location:str,arrival_date:str,rou
     
 
 @tool
-def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list):
+def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list)->dict:
     '''It Returns the hotel available in the Place entered
-    if there is no children keep children as 0 and num_children as None
+    if there is no children keep children as 0 and num_children as empty list ->[]
     Date format to be taken is dd-mm-yyyy'''
     url=hotel_url(Place_name)
     if num_childrens!=0:
@@ -99,7 +99,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
     for key, value in replacements.items():
         url = re.sub(rf'(?<=\b{key}=)[^&]+', value, url)
         
-        service = Service(r"msedgedriver.exe")
+    service = Service("msedgedriver.exe")
     print(url)
 
         # Use the Edge WebDriver
@@ -138,6 +138,7 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
         while len(value) < max_length:
             value.append(np.nan) 
     df=pd.DataFrame(data)
+    top_hotels=df.sort_values(by=['price','hotel_rating'],ascending=[True,False]).head(3)
     
 
 
@@ -145,11 +146,11 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
 
             # Function to close any pop-up if it appears
-    print(len(hotel_name),len(hotel_type),len(area_name))
-    return df
+    
+    return top_hotels.to_dict(orient='records')
 
 
-
+@tool
 def check_train_station(departure:str, arrival:str)->tuple:
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
     
@@ -245,9 +246,12 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
     date_of_departure :  Date of departure format ('dd-mm-yyyy) 
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
-    if round_trip:
+    if round_trip==False:
         data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+        return {'one_way_trip':data}
     else:
+        data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+
         data1=train_data(departure_station_code=arrival_station_code,arrival_station_code=departure_station_code,date_of_departure=date_of_departure)
 
         return {'Departing ticket':data,'return ticket':data1}
