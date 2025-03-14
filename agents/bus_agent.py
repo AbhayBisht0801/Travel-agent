@@ -55,7 +55,7 @@ def bus_agent(text:str)->dict:
 
 
     # Main execution
-    messages = [SystemMessage(content='''Return the output in a dictionary format. 
+    messages = [SystemMessage(content='''Return the final output in a dictionary format. 
     If it is mentioned for one person and no  other details mentioned consider it for one person'''),HumanMessage(content=text)]
    
     # Initial tool invocation
