@@ -3,6 +3,7 @@ from agents.train_agent import train_agent
 from agents.plane_scrape import plane_agent
 from utils.tools import combine_output
 from agents.hotel_agent import hotel_agent
+from agents.travelguide_agent import tourist_guide
 
 from langchain_core.messages import HumanMessage, ToolMessage
 
@@ -29,5 +30,3 @@ def sub_agent_invoke_tools(tool_calls, messages):
 
 
 
-
-        

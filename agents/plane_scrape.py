@@ -9,6 +9,7 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from utils.common import extract_json
 from utils.tools_caller import invoke_tools
 import pandas as pd
 import json
@@ -53,6 +54,7 @@ def plane_agent(text:str)->str:
         messages = invoke_tools(res.tool_calls, messages)
         try:
             res = llm_with_tools.invoke(messages)
+            res = extract_json(res)
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
     return res.content

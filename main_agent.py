@@ -7,9 +7,10 @@ from agents.bus_agent import bus_agent
 from utils.tools import check_train_station, scrape_train, hotel_data
 from langchain_ollama import OllamaLLM
 from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
-from typing import TypedDict,Annotated, Optional,Literal
 from dotenv import load_dotenv
+from utils.common import Getting, extract_json
 import os
+# from utils.sub_agent_tool_caller import main_agent_invoke_tools
 from langchain_cohere import ChatCohere
 
 
@@ -18,7 +19,7 @@ import json
 import time
 t1 = time.time()
 api_key = os.getenv('CO_API_KEY')
-llm2 = ChatCohere(cohere_api_key = api_key)
+# llm2 = ChatCohere(cohere_api_key = api_key)
 
 class Getting(TypedDict):
   agents:Annotated[list[str],"From this give me the name of the agents which are keys"]
@@ -38,7 +39,7 @@ def extract_json(response: str):
 available_actions = {
     "ticketing_agent": ticketing_agent,
     "hotel_agent": hotel_agent,
-    "tourist_guide": travel_guide
+    "tourist_guide": tourist_guide
 }
 
 def generate_text_with_conversation(messages, model):
@@ -46,7 +47,29 @@ def generate_text_with_conversation(messages, model):
     response = model.invoke(messages)
     return response.strip()
 
+def main_agent_invoke_tools(tool_calls):
+  res = []
 
+  for tool_call in tool_calls.keys():
+    # print(tool_call)
+    tool_name = tool_call
+    # print(tool_name)
+    tool_args = tool_calls[tool_call]  # Corrected dictionary key access
+    # print(tool_args)
+
+    if tool_name == "ticketing_agent":
+        tool_output = ticketing_agent(tool_args)  # Corrected function call
+    elif tool_name == "hotel_agent":
+        tool_output = hotel_agent(tool_args)  # Corrected function call
+    elif tool_name == "tourist_guide":
+        tool_output = tourist_guide(tool_args)  # Corrected function call
+    res.append(tool_name)
+    res.append(tool_output)
+    # print(f"Tool output for {tool_name}: {tool_output}")  # Debugging output
+    # print('result is ',res)
+  return res
+
+    
 
 def fun(text: str)->dict:
     llm = OllamaLLM(model="gemma2:2b")
@@ -122,10 +145,12 @@ def fun(text: str)->dict:
     print("Result is:", result)
     
     res = main_agent_invoke_tools(result)
-    print(res)
-    
+    print('final result is ',res)
     
 
-print(fun("Find me a places to visit in Bangalore from 26th march to 27tgh march"))
+    
+if __name__== '__main__':
 
-print(time.time()-t1)
+  print(fun("Find me a places to visit in Bangalore from 26th march to 27tgh march"))
+
+  print(time.time()-t1)

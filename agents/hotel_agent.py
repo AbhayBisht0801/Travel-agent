@@ -7,6 +7,7 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from utils.common import extract_json
 import re
 from utils.tools_caller import invoke_tools
 from utils.tools import hotel_data
@@ -56,6 +57,7 @@ def hotel_agent(text:str)->dict:
         
         try:
             res = llm_with_tools.invoke(messages)
+            res = extract_json(res)
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
     return res.content

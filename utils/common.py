@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 import pandas as pd
+from typing import TypedDict,Annotated
 import os
 from langchain_cohere import ChatCohere
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -18,6 +19,22 @@ load_dotenv()
 api_key = os.getenv('CO_API_KEY')
 
 llm= ChatCohere(cohere_api_key = api_key)
+
+
+class Getting(TypedDict):
+  agents:Annotated[list[str],"From this give me the name of the agents which are keys"]
+  agent_input : Annotated[list[str],"this should output the string which should be the input for the agents"]
+
+
+def extract_json(response: str):
+    """Extract JSON from the model response."""
+    try:
+        return json.loads(response.strip("```json").strip("```").strip())
+    except json.JSONDecodeError:
+        print("Error: Could not parse JSON from response")
+        return None
+
+
 
 def clean_train_details(text,chunk_size=3):
     pattern = r"\d{2}% Chance"
@@ -105,7 +122,7 @@ def bus_url(departure_place,arrival_place):
 
     # Enter text into the input field
     input_element.send_keys(departure_place)
-    time.sleep(2)
+    time.sleep(3)
     # Optionally, submit the form if needed
     input_element.send_keys(Keys.DOWN)
     input_element.send_keys(Keys.RETURN)
@@ -115,7 +132,7 @@ def bus_url(departure_place,arrival_place):
 
     # Enter text into the input field
     input_element.send_keys(arrival_place)
-    time.sleep(2)
+    time.sleep(3)
     # Optionally, submit the form if needed
     input_element.send_keys(Keys.DOWN)
     input_element.send_keys(Keys.RETURN)
@@ -171,7 +188,7 @@ def bus_data(url):
                 
 
 
-                
+                print(top_3)
                 return top_3.to_dict(orient='records')
             
 
@@ -201,7 +218,7 @@ def bus_data(url):
                 
 
 
-                
+                print(top_3)
                 return top_3.to_dict(orient='records')
             except Exception as e:
                 return 'No buses available'
