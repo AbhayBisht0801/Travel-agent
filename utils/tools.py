@@ -316,5 +316,5 @@ def planning(arrival_date:str,departure_date:str,place:str)->str:
 @tool
 def combine_output(bus_result:str,plane_result:str,train_result:str)->str:
     """Input bus_result,plane_result,train_result as string and return the combined output """
-    return 'Bus Tickets'+'\n'+bus_result+'+\n'+'Plane Tickets'+'\n'+plane_result+'\n'+'Train Tickets'+'\n'+train_result
+    return {'Bus Tickets':+bus_result,'Plane Tickets':plane_result,'Train Tickets':train_result}
 
