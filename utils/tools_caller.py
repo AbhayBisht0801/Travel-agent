@@ -32,7 +32,7 @@ def invoke_tools(tool_calls, messages):
         elif tool_name == "scrape_plane":
             print(tool_args)
             # Ensure numeric values are converted to strings if needed.
-            tool_args["num_adults"] = str(tool_args["num_adults"])
+            tool_args["dults"] = str(tool_args["adults"])
             tool_args["child"] = str(tool_args["child"])
             tool_args["infant"] = str(tool_args["infant"])
             

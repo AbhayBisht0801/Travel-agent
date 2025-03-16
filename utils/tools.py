@@ -233,12 +233,12 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date: s
     Return both the cheapest flight in terms of time and price
     Note: round_ticket is TRUE only done when the input mentions it or if its a complete travel plan"""
     if round_trip:
-        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant)
-        data1=plane_data(adults=adults,departure_airport_code=arrival_airport_code,arrival_airport_code=departure_airport_code,child=child,infant=infant)
+        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date)
+        data1=plane_data(adults=adults,departure_airport_code=arrival_airport_code,arrival_airport_code=departure_airport_code,child=child,infant=infant,date=date)
         return {'Departing ticket':data,'return_ticket':data1}
         
     else:
-        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant)
+        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date)
         return data
         
 
@@ -270,7 +270,7 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
 #     arrival_place=airport_name(arrival_place)
 #     return departure_place,arrival_place
 
-
+@tool
 def check_airport(departure_place: str, arrival_place: str) -> Tuple[str, str]:
     """Find the nearby airport for both departure_place and arrival_place"""
     try:

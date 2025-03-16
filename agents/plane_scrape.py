@@ -43,7 +43,8 @@ def plane_agent(text:str)->str:
 
 # Main execution
     messages = [SystemMessage(content='''Return the final output in a dictionary format. 
-    If it is mentioned for one person and no  other details mentioned consider it for one person'''),
+    If it is mentioned for one person and no  other details mentioned consider it for one person
+                              Eg.Find me ticket for me .here it clearly means only for him that is for one person.'''),
                               HumanMessage(content=text)]
 
     # Initial tool invocation
