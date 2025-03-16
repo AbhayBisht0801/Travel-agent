@@ -5,10 +5,10 @@ from agents.train_agent import train_agent
 from agents.plane_scrape import plane_agent
 from agents.bus_agent import bus_agent
 from utils.tools import check_train_station, scrape_train, hotel_data
+
 from langchain_ollama import OllamaLLM
 from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 from dotenv import load_dotenv
-from utils.common import Getting, extract_json
 import os
 # from utils.sub_agent_tool_caller import main_agent_invoke_tools
 from langchain_cohere import ChatCohere
@@ -21,18 +21,6 @@ t1 = time.time()
 api_key = os.getenv('CO_API_KEY')
 # llm2 = ChatCohere(cohere_api_key = api_key)
 
-class Getting(TypedDict):
-  agents:Annotated[list[str],"From this give me the name of the agents which are keys"]
-  agent_input : Annotated[list[str],"this should output the string which should be the input for the agents"]
-
-
-def extract_json(response: str):
-    """Extract JSON from the model response."""
-    try:
-        return json.loads(response.strip("```json").strip("```").strip())
-    except json.JSONDecodeError:
-        print("Error: Could not parse JSON from response")
-        return None
 
 
 # Define available actions for dynamic function calling
@@ -132,7 +120,7 @@ def fun(text: str)->dict:
     
     result = {}  # Initialize an empty dictionary
 
-    data = extract_json(data)  # Ensure `data` is a parsed dictionary
+      # Ensure `data` is a parsed dictionary
 
     if data and "functions" in data:  # Check if "functions" key exists
         for function in data["functions"]:

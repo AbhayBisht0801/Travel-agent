@@ -25,6 +25,8 @@ load_dotenv()
 import threading
 api_key = os.getenv('CO_AP_KEY')
 llm = ChatCohere(cohere_api_key= api_key)
+
+from typing import Tuple
 # from langchain_ollama import OllamaLLM
 
 # llm = OllamaLLM(model="gemma2:2b")
@@ -153,70 +155,74 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 @tool
 def check_train_station(departure:str, arrival:str)->tuple:
     """Extract train stations for both departure and arrival cities separately and return station with max 'Code'."""
-    
-    departure_stations = []
-    arrival_stations = []
-    lock = threading.Lock()  # Prevent race conditions
+    try:
+        departure_stations = []
+        arrival_stations = []
+        lock = threading.Lock()  # Prevent race conditions
 
-    def station_check(city, station_list):
-        """Fetch all train stations for a given city from trainspy.com."""
-        service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
-        driver = webdriver.Edge(service=service)
+        def station_check(city, station_list):
+            """Fetch all train stations for a given city from trainspy.com."""
+            service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
+            driver = webdriver.Edge(service=service)
 
-        try:
-            driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
-            time.sleep(2)
+            try:
+                driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
+                time.sleep(2)
 
-            table = driver.find_elements(By.ID, "trains")
-            table = table[1]
-            print(table)
-            time.sleep(1)
-            rows = table.find_elements(By.TAG_NAME, "tr")[1:]  # Skip header row
+                table = driver.find_elements(By.ID, "trains")
+                table = table[1]
+                print(table)
+                time.sleep(1)
+                rows = table.find_elements(By.TAG_NAME, "tr")[1:]  # Skip header row
 
-            city_stations = []
-            for row in rows:
-                row_data = [cell.text for cell in row.find_elements(By.TAG_NAME, "td")]
-                if row_data:  # Ensure non-empty rows
-                    city_stations.append(row_data)
+                city_stations = []
+                for row in rows:
+                    row_data = [cell.text for cell in row.find_elements(By.TAG_NAME, "td")]
+                    if row_data:  # Ensure non-empty rows
+                        city_stations.append(row_data)
 
-            with lock:
-                station_list.extend(city_stations)
+                with lock:
+                    station_list.extend(city_stations)
 
-        except Exception as e:
-            print(f"Error fetching stations for {city}: {e}")
+            except Exception as e:
+                print(f"Error fetching stations for {city}: {e}")
 
-        finally:
-            driver.quit()
+            finally:
+                driver.quit()
 
-    # Create and start threads for both cities
-    threads = [
-        threading.Thread(target=station_check, args=(departure, departure_stations)),
-        threading.Thread(target=station_check, args=(arrival, arrival_stations)),
-    ]
+        # Create and start threads for both cities
+        threads = [
+            threading.Thread(target=station_check, args=(departure, departure_stations)),
+            threading.Thread(target=station_check, args=(arrival, arrival_stations)),
+        ]
 
-    for thread in threads:
-        thread.start()
+        for thread in threads:
+            thread.start()
 
-    for thread in threads:
-        thread.join()
+        for thread in threads:
+            thread.join()
 
-    # Convert lists into separate Pandas DataFrames
-    departure_df = pd.DataFrame(departure_stations, columns=["Station Name", "Code", "Distance"])
-    arrival_df = pd.DataFrame(arrival_stations, columns=["Station Name", "Code", "Distance"])
-    departure_df["Distance"] = departure_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
-    arrival_df["Distance"] = arrival_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
-    print('arrival is ', arrival_df['Distance'])
-    # Convert 'Code' column to numeric for sorting
-    departure_df["Code"] = pd.to_numeric(departure_df["Code"], errors='coerce')
-    arrival_df["Code"] = pd.to_numeric(arrival_df["Code"], errors='coerce')
+        # Convert lists into separate Pandas DataFrames
+        departure_df = pd.DataFrame(departure_stations, columns=["Station Name", "Code", "Distance"])
+        arrival_df = pd.DataFrame(arrival_stations, columns=["Station Name", "Code", "Distance"])
+        departure_df["Distance"] = departure_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
+        arrival_df["Distance"] = arrival_df["Distance"].str.extract(r"([\d\.]+)").astype(float)
+        print('arrival is ', arrival_df['Distance'])
+        # Convert 'Code' column to numeric for sorting
+        departure_df["Code"] = pd.to_numeric(departure_df["Code"], errors='coerce')
+        arrival_df["Code"] = pd.to_numeric(arrival_df["Code"], errors='coerce')
 
-    # Find station name where 'Code' is maximum
-    max_departure_station = departure_df.loc[departure_df["Distance"].idxmin(), "Station Name"] if not departure_df.empty else None
-    max_arrival_station = arrival_df.loc[arrival_df["Distance"].idxmin(), "Station Name"] if not arrival_df.empty else None
-    print(type(max_arrival_station),type(max_departure_station))
-    departure_station_code=extract_station_code(max_departure_station)
-    arrival_station_code=extract_station_code(max_arrival_station)
-    return departure_station_code, arrival_station_code
+        # Find station name where 'Code' is maximum
+        max_departure_station = departure_df.loc[departure_df["Distance"].idxmin(), "Station Name"] if not departure_df.empty else None
+        max_arrival_station = arrival_df.loc[arrival_df["Distance"].idxmin(), "Station Name"] if not arrival_df.empty else None
+        print(type(max_arrival_station),type(max_departure_station))
+        departure_station_code=extract_station_code(max_departure_station)
+        arrival_station_code=extract_station_code(max_arrival_station)
+        return departure_station_code, arrival_station_code
+    except Exception as e:
+        return 'None'
+   
+
 
 
 @tool
@@ -257,12 +263,39 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
         return {'Departing ticket':data,'return ticket':data1}
     
 
-@tool
-def check_airport(departure_place: str,arrival_place:str) -> str:
-    """Find the nearby airport  for both departure_place and arrival_place"""
-    departure_place=airport_name(departure_place)
-    arrival_place=airport_name(arrival_place)
-    return departure_place,arrival_place
+# @tool
+# def check_airport(departure_place: str,arrival_place:str) -> str:
+#     """Find the nearby airport  for both departure_place and arrival_place"""
+#     departure_place=airport_name(departure_place)
+#     arrival_place=airport_name(arrival_place)
+#     return departure_place,arrival_place
+
+
+def check_airport(departure_place: str, arrival_place: str) -> Tuple[str, str]:
+    """Find the nearby airport for both departure_place and arrival_place"""
+    try:
+        departure_airport_code = [None]  # Using a list to store a single mutable value
+        arrival_airport_code = [None]
+
+        def get_airport_code(place: str, result_list: list):
+            result_list[0] = airport_name(place)  # Assign the returned string
+
+        threads = [
+            threading.Thread(target=get_airport_code, args=(departure_place, departure_airport_code)),
+            threading.Thread(target=get_airport_code, args=(arrival_place, arrival_airport_code)),
+        ]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        return departure_airport_code[0], arrival_airport_code[0]  # Extract the single values from lists
+
+    except Exception as e:
+        return "Not able to get nearby airports", "Not able to get nearby airports"
+
    
     
     
@@ -316,5 +349,5 @@ def planning(arrival_date:str,departure_date:str,place:str)->str:
 @tool
 def combine_output(bus_result:str,plane_result:str,train_result:str)->str:
     """Input bus_result,plane_result,train_result as string and return the combined output """
-    return {'Bus Tickets':+bus_result,'Plane Tickets':plane_result,'Train Tickets':train_result}
+    return {'Bus Tickets':bus_result,'Plane Tickets':plane_result,'Train Tickets':train_result}
 

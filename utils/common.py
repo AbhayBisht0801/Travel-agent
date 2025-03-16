@@ -1,5 +1,6 @@
 import re
 import time
+import json
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.service import Service
@@ -235,22 +236,7 @@ def extract_station_code(station):
 def available_ticket_check(text):
     result= [i for i in text for j in i.values() if any('AVAILABLE' in k for k in j.get('availbilty', []))]
     return sorted(result, key=lambda x: next(iter(x.values()))['travel_time'])
-def airport_name(place):
-    search_result = search.invoke(f"what is the nearest commercial active airport for in {place}?")
-        
-    response = llm.invoke(f"""
-        Find the nearby airport to {place} from this information:
-        {search_result}
-        
-        Return only the nearest airport with its airport/station code.
-        Eg:
-        Human message:
-        By Place. Surathkal has does not have airport. The nearby airport to surathkal is Mangalore Airport Bejpai (IXE)
-        AI message:
-        Mangalore Airport(IXE)
 
-        """)
-    return response
 def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_code):
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
     
@@ -338,6 +324,53 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
             return train_det
     except Exception as e:
         return f'No trains Available {e}'
+def airport_name(place):
+    search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
+    
+    response = llm.invoke(f"""
+        Find the nearest wellknown  city and district name of the {place} from this information:
+        {search_result}
+        
+        Return only wellknown  city and district name
+        note:Extract and return city and district name
+        note: return city name in general known rather  that in regional name
+        format
+        
+        Note: return the city name in city and district name in district and not state name instead
+        
+        """)
+    print(response)
+    result=response.content.split(':')[1:]
+    
+    result=[i.split('\n')[0].strip().replace('*','')  for i in result]
+    result=[i.replace('luru','lore') if i.endswith('luru') else i for i in result]
+    result = [i.strip() for i in result if i != '']
+    
+    
+    service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
+    
+    edge_options = Options()
+    edge_options.add_argument("--headless")
+    driver = webdriver.Edge(service=service,options=edge_options)
+    wait = WebDriverWait(driver, 10)
+    place_name=[]
+    for i in result:
+      driver.get(f'https://www.closestairportto.com/city/india/{i}')
+      try:
+        input_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'p')))
+        matches = re.findall(r'\((.*?)\)', input_element.text)
+        if matches[0].lower()=='udupi':
+          matches=matches[0].replace('udupi','udipi')
+          place_name.append(matches)
+        else:   
+          place_name.append(matches[0])
+
+      except Exception as e:
+         pass
+         
+
+      
+    return place_name[0]
 
 
     

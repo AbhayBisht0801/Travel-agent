@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import json
+
 import time
 from utils.tools import scrape_train,check_train_station
 
@@ -71,9 +72,9 @@ def train_agent(text:str)->json:
         messages = invoke_tools(res.tool_calls, messages)
         try:
             res = llm_with_tools.invoke(messages)
-            res = res.content
-            res= extract_json(res)
+            res = res
+            
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
-
-    return res
+    
+    return res.content

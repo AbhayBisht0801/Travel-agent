@@ -47,7 +47,7 @@ def hotel_agent(text:str)->dict:
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
-    print('result is',res.content)
+    
 
     while res.tool_calls:
         print(res)
@@ -57,7 +57,7 @@ def hotel_agent(text:str)->dict:
         
         try:
             res = llm_with_tools.invoke(messages)
-            res = extract_json(res)
+            
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
     return res.content

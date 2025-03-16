@@ -61,6 +61,7 @@ def bus_agent(text:str)->dict:
    
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
+    print(res)
 
     while res.tool_calls:
         
@@ -68,9 +69,8 @@ def bus_agent(text:str)->dict:
         messages = invoke_tools(res.tool_calls, messages)
         try:
             res = llm_with_tools.invoke(messages)
-            res = res.content
-            res = extract_json(res)
+            res = res
 
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
-    return res
+    return res.content
