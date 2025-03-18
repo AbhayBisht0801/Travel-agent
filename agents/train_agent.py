@@ -23,6 +23,7 @@ llm = ChatCohere(cohere_api_key = api_key)
 # Initialize tools and LLM
 search = DuckDuckGoSearchRun()
 def invoke_tools(tool_calls, messages):
+   
     for tool_call in tool_calls:
         print(tool_call)
         tool_name = tool_call["name"]
@@ -37,9 +38,10 @@ def invoke_tools(tool_calls, messages):
         elif tool_name == "scrape_train":
             tool_output = scrape_train.invoke(tool_args)
             messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
-       
+    
 
     return messages
+   
 
 
 
@@ -52,29 +54,33 @@ def invoke_tools(tool_calls, messages):
 
 # Initial Message
 @tool
-def train_agent(text:str)->json:
+def train_agent(text:str)->str:
+    
     """The input should as below 
     Eg:
     find me a train from mumbai to bangalore  on 5 March 2025 
     This tool returns all the train details
     """
-    llm_with_tools = llm.bind_tools([check_train_station, scrape_train])
+    try:
+        llm_with_tools = llm.bind_tools([check_train_station, scrape_train])
 
-    messages = [SystemMessage(content='''Return the output in a dictionary format. 
-    If it is mentioned for one person and no  other details mentioned consider it for one person'''),HumanMessage(content=text)]
+        messages = [SystemMessage(content='''Return the output in a dictionary format. 
+        If it is mentioned for one person and no  other details mentioned consider it for one person'''),HumanMessage(content=text)]
 
-    res = llm_with_tools.invoke(messages)
+        res = llm_with_tools.invoke(messages)
 
 
-    # Invoke LLM
-    while res.tool_calls:
-        messages.append(res)
-        messages = invoke_tools(res.tool_calls, messages)
-        try:
-            res = llm_with_tools.invoke(messages)
-            res = res
-            
-        except Exception as e:
-            print("An error occurred during LLM invocation:", str(e))
-    
-    return res.content
+        # Invoke LLM
+        while res.tool_calls:
+            messages.append(res)
+            messages = invoke_tools(res.tool_calls, messages)
+            try:
+                res = llm_with_tools.invoke(messages)
+                res = res
+                
+            except Exception as e:
+                print("An error occurred during LLM invocation:", str(e))
+        
+        return res.content
+    except Exception as e:
+        return 'Not able to scrape train currently.'

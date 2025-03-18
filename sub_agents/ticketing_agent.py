@@ -18,7 +18,7 @@ llm = ChatCohere(cohere_api_key = api_key)
 # llm=ChatCohere()
 
 
-def ticketing_agent(text:str)->dict:
+def ticketing_agent(text:str)->str:
     '''you are an ticketting agent and find the details for bus train and flight'''
     llm_with_tools = llm.bind_tools(tools=[bus_agent,train_agent,plane_agent,combine_output])
 
@@ -31,7 +31,7 @@ def ticketing_agent(text:str)->dict:
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
     print("The Training result is ",res)
-
+    
     while res.tool_calls:
         
         messages.append(res)
@@ -41,11 +41,11 @@ def ticketing_agent(text:str)->dict:
         
         try:
             res = llm_with_tools.invoke(messages)
-            res = res.content
-            print("the result of the following is\n",res)
-            res = extract_json(res)
+            res = res
+            
+           
             
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
     
-    return res
+    return res.content

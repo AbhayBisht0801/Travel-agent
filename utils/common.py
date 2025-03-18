@@ -345,8 +345,8 @@ def airport_name(place):
         note: return city name in general known rather  that in regional name
         format
         
-        Note: return the city name in city and district name in district and not state name instead
-        
+        Note: 1)return the city name in city and district name in district and not state name instead
+              2) Just return city name and district  not additional_details
         """)
     print(response)
     result=response.content.split(':')[1:]
