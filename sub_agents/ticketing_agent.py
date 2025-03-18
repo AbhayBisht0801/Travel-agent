@@ -30,7 +30,7 @@ def ticketing_agent(text:str)->dict:
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
-    # print("The Training result is ",res)
+    print("The Training result is ",res)
 
     while res.tool_calls:
         
@@ -42,6 +42,7 @@ def ticketing_agent(text:str)->dict:
         try:
             res = llm_with_tools.invoke(messages)
             res = res.content
+            print("the result of the following is\n",res)
             res = extract_json(res)
             
         except Exception as e:

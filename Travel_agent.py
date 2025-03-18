@@ -8,5 +8,6 @@ from utils.common import train_data
 from utils.tools import scrape_train
 # from main_agent import fun
 print('Running')
-print(plane_agent('Find me a plane for me mangalore to haridwar on 26th march 2025'))
+# print(ticketing_agent('Find me a train for me mangalore to bengaluru on 26th march 2025'))
 
+print(scrape_train('BNC', 'MAJN', '26-03-2025',False))

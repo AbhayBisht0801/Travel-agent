@@ -9,7 +9,7 @@ from utils.common import extract_json
 import os
 load_dotenv()
 api_key = os.getenv('CO_API_KEY')
-llm = ChatCohere()
+llm = ChatCohere(cohere_api_key = api_key)
 
 
 

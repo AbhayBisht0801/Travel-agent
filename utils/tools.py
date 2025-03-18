@@ -252,15 +252,19 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
     date_of_departure :  Date of departure format ('dd-mm-yyyy) 
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
-    if round_trip==False:
-        data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
-        return {'one_way_trip':data}
-    else:
-        data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+    try:
+        if round_trip==False:
+            data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+            return {'one_way_trip':data}
+        else:
+            data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
 
-        data1=train_data(departure_station_code=arrival_station_code,arrival_station_code=departure_station_code,date_of_departure=date_of_departure)
+            data1=train_data(departure_station_code=arrival_station_code,arrival_station_code=departure_station_code,date_of_departure=date_of_departure)
 
-        return {'Departing ticket':data,'return ticket':data1}
+            return {'Departing ticket':data,'return ticket':data1}
+
+    except Exception as e:
+        print('not able to fetch the train details at the movement')
     
 
 # @tool

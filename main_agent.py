@@ -60,7 +60,7 @@ def main_agent_invoke_tools(tool_calls):
     
 
 def fun(text: str)->dict:
-    llm = OllamaLLM(model="gemma2:2b")
+    llm = OllamaLLM(model="gemma3:1b")
     prompt = '''You are a travel AI agent with three specialized functions.
 
     Your available actions are:

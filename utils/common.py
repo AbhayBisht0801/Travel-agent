@@ -9,12 +9,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
+from langchain_core.output_parsers import JsonOutputParser
+from langchain.prompts import PromptTemplate
 import pandas as pd
 from typing import TypedDict,Annotated
 import os
 from langchain_cohere import ChatCohere
 from langchain_community.tools import DuckDuckGoSearchRun
 search = DuckDuckGoSearchRun()
+from langchain_ollama import OllamaLLM
 from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv('CO_API_KEY')
@@ -27,13 +30,18 @@ class Getting(TypedDict):
   agent_input : Annotated[list[str],"this should output the string which should be the input for the agents"]
 
 
-def extract_json(response: str):
-    """Extract JSON from the model response."""
-    try:
-        return json.loads(response.strip("```json").strip("```").strip())
-    except json.JSONDecodeError:
-        print("Error: Could not parse JSON from response")
-        return None
+def extract_json(data:str):
+  model = OllamaLLM(model='gemma2:2b')
+  parser=  JsonOutputParser()
+  template = PromptTemplate(
+      template='give the function_name and function_params from {data} \n {format_instruction}',
+      input_variables=['topic'],
+      partial_variables={'format_instruction': parser.get_format_instructions()}
+  )
+
+  chain = template | model | parser
+  result = chain.invoke({'data': data})
+  return result
 
 
 
@@ -325,6 +333,7 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
     except Exception as e:
         return f'No trains Available {e}'
 def airport_name(place):
+    time.sleep(5)
     search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
     
     response = llm.invoke(f"""
