@@ -248,9 +248,9 @@ def available_ticket_check(text):
 def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_code):
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
     
-    edge_options = Options()
-    edge_options.add_argument("--headless")
-    driver = webdriver.Edge(service=service,options=edge_options)
+    # edge_options = Options()
+    # edge_options.add_argument("--headless")
+    driver = webdriver.Edge(service=service)
     
     try:
         driver.get(f'https://www.cleartrip.com/flights/results?adults={adults}&childs={child}&infants={infant}&class=Economy&depart_date={date}&from={departure_airport_code}&to={arrival_airport_code}&intl=n')
@@ -272,6 +272,7 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
             "Ticket Price": [i.text for i in ticket_price],
         }
         df=pd.DataFrame(data)
+        print(df)
         best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1).to_dict(orient='records')
         best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1).to_dict(orient='records')
         print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')

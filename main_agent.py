@@ -116,6 +116,7 @@ def fun(text: str)->dict:
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
     data = generate_text_with_conversation(messages, model=llm)
+    print(data)
     data=extract_json(data)
     
     result = {}  # Initialize an empty dictionary
@@ -141,6 +142,6 @@ def fun(text: str)->dict:
     
 if __name__== '__main__':
 
-  print(fun("Plan my trip from mumbai to haridwar from 26 march 2025 to 30 march 2025 "))
+  print(fun("find me round trip of train from mumbai to haridwar from 26 march 2025 and 30 march 2025 "))
 
   print(time.time()-t1)

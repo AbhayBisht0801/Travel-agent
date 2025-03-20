@@ -221,47 +221,80 @@ def check_train_station(departure:str, arrival:str)->tuple:
         return departure_station_code, arrival_station_code
     except Exception as e:
         return 'Currently not able to scrape train data'
-   
-
-
-
 @tool
-def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date: str, adults: str, child: str, infant: str,round_trip:bool) -> json:
+def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date:list, adults: str, child: str, infant: str,round_trip:bool) -> json:
     """Scrapes flight details from Cleartrip based on input parameters.
     take the airport code that is in (Code)
     date: Date of departure format ('dd/mm/yyyy) and return the best flights
     Return both the cheapest flight in terms of time and price
-    Note: round_ticket is TRUE only done when the input mentions it or if its a complete travel plan"""
-    if round_trip:
-        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date)
-        data1=plane_data(adults=adults,departure_airport_code=arrival_airport_code,arrival_airport_code=departure_airport_code,child=child,infant=infant,date=date)
-        return {'Departing ticket':data,'return_ticket':data1}
+    Note: *1*.round_ticket is TRUE only done when the input mentions it or if its a complete travel plan
+    *2*.dates is list it has one date input if only one way ticket else its list containing two input one depature date and another return date.
+    *3*.format of this date is dd-mm-yyyy
+    *4*.It can scrape data for both one way trip and round trip."""
+    if round_trip==True:
+        departure_data = [None]
+        return_data = [None]
+
+        def plane_data_wrapper(adults,departure_airport_code,arrival_airport_code,child,infant,date_value,result_holder):
+            result = plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date_value)  # Call train_data with 3 arguments
+            result_holder[0] = result  # Store result in the mutable list
+           
+
+
+        threads = [
+            threading.Thread(target=plane_data_wrapper, args=(adults,departure_airport_code,arrival_airport_code,child,infant,date[0],departure_data)),
+            threading.Thread(target=plane_data_wrapper, args=(adults,arrival_airport_code,departure_airport_code,child,infant,date[1],return_data)),
+        ]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
+        
         
     else:
-        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date)
-        return data
-        
-
-    
+        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date[0])
+        return {'one way ticket':data}
    
 @tool
-def scrape_train(departure_station_code: str, arrival_station_code: str, date_of_departure: str,round_trip:bool) -> str:
+def scrape_train(departure_station_code: str, arrival_station_code: str, dates:list,round_trip:bool) -> str:
     """ Scrape trains from confirm it based on input parameters
     take the railway station code that is in the ( )
     
-    date_of_departure :  Date of departure format ('dd-mm-yyyy) 
+    Note:
+    *1*.dates is list it has one date input if only one way ticket else its list containing two input one depature date and another return date.
+    *2*.format of this date is dd-mm-yyyy
+    *3*.It can scrape data for both one way trip and round trip.
+    
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
     try:
         if round_trip==False:
-            data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+            data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=dates[0])
             return {'one_way_trip':data}
         else:
-            data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=date_of_departure)
+            departure_data = [None]
+            return_data = [None]
 
-            data1=train_data(departure_station_code=arrival_station_code,arrival_station_code=departure_station_code,date_of_departure=date_of_departure)
+            def train_data_wrapper( departure_station_code,arrival_station_code ,dates, result_holder):
+                result = train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=dates)  # Call train_data with 3 arguments
+                result_holder[0] = result  # Store result in the mutable list
 
-            return {'Departing ticket':data,'return ticket':data1}
+            threads = [
+                threading.Thread(target=train_data_wrapper, args=(departure_station_code,arrival_station_code ,dates[0], departure_data)),
+                threading.Thread(target=train_data_wrapper, args=(arrival_station_code,departure_station_code,dates[1], return_data)),
+            ]
+
+            for thread in threads:
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+
+            return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
 
     except Exception as e:
         print('not able to fetch the train details at the movement')
