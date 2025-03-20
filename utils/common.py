@@ -272,8 +272,8 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
             "Ticket Price": [i.text for i in ticket_price],
         }
         df=pd.DataFrame(data)
-        best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1).to_json()
-        best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1).to_json()
+        best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1).to_dict(orient='records')
+        best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1).to_dict(orient='records')
         print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')
         return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}'
 
@@ -348,12 +348,15 @@ def airport_name(place):
         Note: 1)return the city name in city and district name in district and not state name instead
               2) Just return city name and district  not additional_details
         """)
-    print(response)
+
     result=response.content.split(':')[1:]
+    print(result)
     
     result=[i.split('\n')[0].strip().replace('*','')  for i in result]
+   
     result=[i.replace('luru','lore') if i.endswith('luru') else i for i in result]
     result = [i.strip() for i in result if i != '']
+    result=['Bengaluru'   if i=='Bangalore' else i for i in result ]
     
     
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))

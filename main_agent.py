@@ -5,7 +5,7 @@ from agents.train_agent import train_agent
 from agents.plane_scrape import plane_agent
 from agents.bus_agent import bus_agent
 from utils.tools import check_train_station, scrape_train, hotel_data
-
+from utils.common import extract_json
 from langchain_ollama import OllamaLLM
 from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 from dotenv import load_dotenv
@@ -36,7 +36,7 @@ def generate_text_with_conversation(messages, model):
     return response.strip()
 
 def main_agent_invoke_tools(tool_calls):
-  res = []
+  res = {}
 
   for tool_call in tool_calls.keys():
     # print(tool_call)
@@ -51,8 +51,8 @@ def main_agent_invoke_tools(tool_calls):
         tool_output = hotel_agent(tool_args)  # Corrected function call
     elif tool_name == "tourist_guide":
         tool_output = tourist_guide(tool_args)  # Corrected function call
-    res.append(tool_name)
-    res.append(tool_output)
+   
+    res[tool_name]=tool_output
     # print(f"Tool output for {tool_name}: {tool_output}")  # Debugging output
     # print('result is ',res)
   return res
@@ -60,7 +60,7 @@ def main_agent_invoke_tools(tool_calls):
     
 
 def fun(text: str)->dict:
-    llm = OllamaLLM(model="gemma3:1b")
+    llm = OllamaLLM(model="gemma2:2b")
     prompt = '''You are a travel AI agent with three specialized functions.
 
     Your available actions are:
@@ -116,20 +116,22 @@ def fun(text: str)->dict:
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
     data = generate_text_with_conversation(messages, model=llm)
-    
+    data=extract_json(data)
     
     result = {}  # Initialize an empty dictionary
 
       # Ensure `data` is a parsed dictionary
-
+    
     if data and "functions" in data:  # Check if "functions" key exists
+        
         for function in data["functions"]:
           
             function_name = function["function_name"]  # Extract function name
             function_text = function["function_params"]["text"]  # Extract text
             
             result[function_name] = function_text  # Store as key-value pair
-
+    print(type(result))
+    print(result)
     print("Result is:", result)
     
     res = main_agent_invoke_tools(result)
@@ -139,6 +141,6 @@ def fun(text: str)->dict:
     
 if __name__== '__main__':
 
-  print(fun("Find me a places to visit in Bangalore from 26th march to 27tgh march"))
+  print(fun("Plan my trip from mumbai to haridwar from 26 march 2025 to 30 march 2025 "))
 
   print(time.time()-t1)

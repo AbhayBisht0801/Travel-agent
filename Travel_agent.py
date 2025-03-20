@@ -8,4 +8,4 @@ from utils.common import train_data
 from utils.tools import scrape_train
 # from main_agent import fun
 print('Running')
-print(ticketing_agent('Find me a train for me mangalore to bengaluru on 26th march 2025'))
+print(('Find me a train for me mangalore to bengaluru on 26th march 2025'))

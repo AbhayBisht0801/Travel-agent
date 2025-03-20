@@ -29,7 +29,7 @@ def tourist_guide(text:str)->str:
         messages = invoke_tools(res.tool_calls, messages)
         try:
             res = llm_with_tools.invoke(messages)
-            res = extract_json(res)
+            
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
 

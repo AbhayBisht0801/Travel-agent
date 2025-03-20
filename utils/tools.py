@@ -274,7 +274,7 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, date_of
 #     arrival_place=airport_name(arrival_place)
 #     return departure_place,arrival_place
 
-
+@tool
 def check_airport(departure_place: str, arrival_place: str) -> Tuple[str, str]:
     """Find the nearby airport for both departure_place and arrival_place"""
     try:
