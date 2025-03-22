@@ -19,14 +19,16 @@ llm = ChatCohere(cohere_api_key = api_key)
 
 
 def ticketing_agent(text:str)->str:
-    '''you are an ticketting agent and find the details for bus train and flight'''
+    '''you are an ticketting agent and find the details for bus train and flight. the final result to be shown is from combine_output 
+    tool which returns the results from bus_agent,train_agent or plane_agent'''
     llm_with_tools = llm.bind_tools(tools=[bus_agent,train_agent,plane_agent,combine_output])
 
 
     # Main execution
     messages = [SystemMessage(content='''Return the final output in a dictionary format. 
     If it is mentioned for one person and no  other details mentioned consider it for one person
-    note: if it is menctioned that round trip or plan a trip then you have to find the trip for bus train and flight'''),HumanMessage(content=text)]
+    note: if it is menctioned that round trip or plan a trip then you have to find the trip for bus train and flight
+    note 2:After the execution of all the plane ,train and bus it should be displayed in a required systematic format'''),HumanMessage(content=text)]
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)
@@ -42,8 +44,7 @@ def ticketing_agent(text:str)->str:
         try:
             res = llm_with_tools.invoke(messages)
             res = res
-            
-           
+
             
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))

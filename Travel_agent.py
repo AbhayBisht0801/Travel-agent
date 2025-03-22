@@ -8,4 +8,4 @@ from utils.common import train_data,plane_data
 from utils.tools import scrape_train
 from main_agent import fun
 print('Running')
-print(fun('Plan me a trip from mumbai to bangalore from 28th march to 31th march 2025 '))
+print(fun('find me bus and train from mumbai to bangalore from 28th march'))

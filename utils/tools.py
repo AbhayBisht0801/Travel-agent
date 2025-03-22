@@ -183,7 +183,7 @@ def check_train_station(departure:str, arrival:str)->tuple:
             """Fetch all train stations for a given city from trainspy.com."""
             service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
             driver = webdriver.Edge(service=service)
-            city= (city.replace('lore','luru') if city.endswith('lore') else city)
+            city= (city.replace('luru','lore') if city.endswith('luru') else city)
             
             try:
                 driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
@@ -406,7 +406,46 @@ def planning(arrival_date:str,departure_date:str,place:str)->str:
     except Exception as e:        
         return f"Error: {e}"
 @tool
-def combine_output(bus_result:str,plane_result:str,train_result:str)->str:
-    """Input bus_result,plane_result,train_result as string and return the combined output """
-    return {'Bus Tickets':bus_result,'Plane Tickets':plane_result,'Train Tickets':train_result}
+def combine_output(bus_data: str, train_data: str) -> dict:
+    
+    api_key = os.getenv('groq_api')
+    llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
 
+    prompt = ''' 
+    You are an AI travel assistant. Your task is to process and combine bus and train travel data.
+
+    - Extract useful details from the input.
+    - for train check for all details such as seats available and price etc 
+    - Format them into a well-structured text response.
+    - If no data is available for a category, return "No data available".
+
+    ### **Output Format:**
+    
+    **Bus Details:**
+    Bus Name: <Bus Name>
+    Departure: <Departure Time>
+    Arrival: <Arrival Time>
+    Price: ₹<Price>
+
+    **Train Details:**
+    Train Name: <Train Name>
+    Departure: <Departure Time>
+    Arrival: <Arrival Time>
+    Coach: <coach> ₹<Price> (price) <seats awailable> (available)
+    
+
+    **Plane Details:**
+    <Plane Status>
+
+    Please ensure the output follows this format exactly.
+    '''
+
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content=f"Bus Data: {bus_data}\nTrain Data: {train_data}")
+    ]
+
+    chain = RunnablePassthrough() | llm 
+    result = chain.invoke(messages)  
+    print(type(result))
+    return result.content
