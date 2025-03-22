@@ -272,6 +272,7 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date:li
 
         for thread in threads:
             thread.join()
+        print(departure_data,return_data)
 
         return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
         

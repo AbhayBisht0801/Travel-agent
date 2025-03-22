@@ -273,6 +273,7 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
         }
         df=pd.DataFrame(data)
         print(df)
+        df=df[df['Plane Name']!='']
         best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1).to_dict(orient='records')
         best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1).to_dict(orient='records')
         print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')
@@ -335,20 +336,38 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
         return f'No trains Available {e}'
 def airport_name(place):
     time.sleep(5)
-    search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
-    
-    response = llm.invoke(f"""
-        Find the nearest wellknown  city and district name of the {place} from this information:
-        {search_result}
+    try:
+        search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
         
-        Return only wellknown  city and district name
-        note:Extract and return city and district name
-        note: return city name in general known rather  that in regional name
-        format
+        response = llm.invoke(f"""
+            Find the nearest wellknown  city and district name of the {place} from this information:
+            {search_result}
+            
+            Return only wellknown  city and district name
+            note:Extract and return city and district name
+            note: return city name in general known rather  that in regional name
+            format
+            
+            Note: 1)return the city name in city and district name in district and not state name instead
+                2) Just return city name and district  not additional_details
+            """)
+    except Exception as e:
+        print('retyring again')
+        search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
         
-        Note: 1)return the city name in city and district name in district and not state name instead
-              2) Just return city name and district  not additional_details
-        """)
+        response = llm.invoke(f"""
+            Find the nearest wellknown  city and district name of the {place} from this information:
+            {search_result}
+            
+            Return only wellknown  city and district name
+            note:Extract and return city and district name
+            note: return city name in general known rather  that in regional name
+            format
+            
+            Note: 1)return the city name in city and district name in district and not state name instead
+                2) Just return city name and district  not additional_details
+            """)
+
 
     result=response.content.split(':')[1:]
     print(result)
