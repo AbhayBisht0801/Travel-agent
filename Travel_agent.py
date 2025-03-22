@@ -6,6 +6,6 @@ from agents.bus_agent import bus_agent
 from utils.tools import check_train_station,scrape_train,hotel_data,combine_output,check_airport
 from utils.common import train_data
 from utils.tools import scrape_train
-# from main_agent import fun
+from main_agent import fun
 print('Running')
-print(plane_agent('Find me a plane for me mangalore to bengaluru on 26th march 2025 and return on 28th march 2025'))
+print(fun('find me a train from mangalore to bengaluru on 26th march 2025 '))

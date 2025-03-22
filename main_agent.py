@@ -137,11 +137,10 @@ def fun(text: str)->dict:
     
     res = main_agent_invoke_tools(result)
     print('final result is ',res)
-    
-
+    return res
+print(time.time()-t1)
     
 if __name__== '__main__':
 
   print(fun("find me round trip of train from mumbai to haridwar from 26 march 2025 and 30 march 2025 "))
 
-  print(time.time()-t1)

@@ -34,8 +34,8 @@ def extract_json(data:str):
   model = OllamaLLM(model='gemma2:2b')
   parser=  JsonOutputParser()
   template = PromptTemplate(
-      template='give the function_name and function_params from {data} \n {format_instruction}',
-      input_variables=['topic'],
+      template='give the functions from {data} \n {format_instruction}',
+      input_variables=['data'],
       partial_variables={'format_instruction': parser.get_format_instructions()}
   )
 
@@ -197,7 +197,7 @@ def bus_data(url):
                 
 
 
-                print(top_3)
+                # print(top_3)
                 return top_3.to_dict(orient='records')
             
 
@@ -227,7 +227,7 @@ def bus_data(url):
                 
 
 
-                print(top_3)
+                # print(top_3)
                 return top_3.to_dict(orient='records')
             except Exception as e:
                 return 'No buses available'

@@ -42,33 +42,52 @@ def bus_place(departure_place:str,arrival_place: str) -> str:
 
 
 @tool
-def bus_details(arrival_location:str,departure_location:str,arrival_date:str,round_ticket:bool,departure_date:str) ->dict :
+def bus_details(arrival_location:str,departure_location:str,date: list,round_trip:bool) ->dict :
     """Fetches available bus details between the given departure and arrival locations for the specified date.
     Date should be of format dd-mm-yyyy.
     If a personal asks for return ticket the departure _location becomes the arrival_location and the departure_location becomes the arrival_location
     This tool return the best bus both in terms of time and price.
-     Note: if  it returns  'No buses available' 
-      so dont call this tool again. 
-    Note: round_ticket is TRUE only done when the input mentions it or if its a complete travel plan"""
+    Note: *1*.round_ticket is TRUE only done when the input mentions it or if its a complete travel plan
+    *2*.dates is list it has one date input if only one way ticket else its list containing two input one depature date and another return date.
+    *3*.format of this date is dd-mm-yyyy
+    *4*.It can scrape data for both one way trip and round trip.
+    *5* If  it returns  'No buses available' so dont call this tool again. 
+    """
     
     # url=get_bus_url(departure_location,arrival_location)
-    
-    if round_ticket==False:
+    if round_trip==True:
+        departure_data = [None]
+        return_data = [None]
+
+        def bus_data_wrapper(arrival_location,departure_location,date_value,result_holder):
+            result = bus_url(departure_place=departure_location,arrival_place=arrival_location)
+            result = re.sub('\d{2}-\d{2}-\d{4}',date_value ,result)  # Call train_data with 3 arguments
+            result = bus_data(result)
+            result_holder[0] = result
+
+        threads = [
+            threading.Thread(target=bus_data_wrapper, args=(arrival_location,departure_location,date[0],departure_data)),
+            threading.Thread(target=bus_data_wrapper, args=(departure_location,arrival_location,date[1],return_data)),
+        ]
+
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
+        
+
+
+    else:
         url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
-        url=re.sub('\d{2}-\d{2}-\d{4}',arrival_date,url)
+        url=re.sub('\d{2}-\d{2}-\d{4}',date[0],url)
         
         data=bus_data(url=url)
         
         return data
-    else:
-        url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
-        url=re.sub('\d{2}-\d{2}-\d{4}',arrival_date,url)
-        url1=bus_url(departure_place=arrival_location,arrival_place=departure_location)
-        url1=re.sub('\d{2}-\d{2}-\d{4}',departure_date,url1)
-        source_depature_data=bus_data(url=url)
-        destination_depature_data=bus_data(url=url1)
-        return {'departure_ticket':source_depature_data,'return_ticket':destination_depature_data}
-        
+                
 
 
     
@@ -164,7 +183,8 @@ def check_train_station(departure:str, arrival:str)->tuple:
             """Fetch all train stations for a given city from trainspy.com."""
             service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
             driver = webdriver.Edge(service=service)
-
+            city= (city.replace('lore','luru') if city.endswith('lore') else city)
+            
             try:
                 driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
                 time.sleep(2)
@@ -178,7 +198,8 @@ def check_train_station(departure:str, arrival:str)->tuple:
                 city_stations = []
                 for row in rows:
                     row_data = [cell.text for cell in row.find_elements(By.TAG_NAME, "td")]
-                    if row_data:  # Ensure non-empty rows
+                    if row_data:
+                        # Ensure non-empty rows
                         city_stations.append(row_data)
 
                 with lock:
