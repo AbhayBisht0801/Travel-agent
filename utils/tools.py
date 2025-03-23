@@ -8,6 +8,9 @@ from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from langchain_groq import ChatGroq
+from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.runnables import RunnablePassthrough
 from utils.common import hotel_url
 import pandas as pd
 import numpy as np

@@ -6,6 +6,8 @@ from agents.plane_scrape import plane_agent
 from agents.bus_agent import bus_agent
 from utils.tools import check_train_station, scrape_train, hotel_data
 from utils.common import extract_json
+from langchain_groq import ChatGroq
+from langchain_core.runnables import RunnablePassthrough  
 from langchain_ollama import OllamaLLM
 from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 from dotenv import load_dotenv
@@ -60,7 +62,8 @@ def main_agent_invoke_tools(tool_calls):
     
 
 def fun(text: str)->dict:
-    llm = OllamaLLM(model="gemma2:2b")
+    api_key = os.getenv('groq_api')
+    llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
     prompt = '''You are a travel AI agent with three specialized functions.
 
     Your available actions are:
