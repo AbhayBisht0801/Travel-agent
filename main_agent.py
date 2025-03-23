@@ -35,7 +35,7 @@ available_actions = {
 def generate_text_with_conversation(messages, model):
     """Generate response from Ollama model."""
     response = model.invoke(messages)
-    return response
+    return response.content
 
 def main_agent_invoke_tools(tool_calls):
   res =''
@@ -61,7 +61,7 @@ def main_agent_invoke_tools(tool_calls):
 
     
 
-def fun(text: str, chat_history: list) -> dict:
+def fun(text: str) -> dict:
     api_key = os.getenv('groq_api')
     llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
     prompt = '''You are a travel AI agent with three specialized functions.
@@ -84,6 +84,8 @@ def fun(text: str, chat_history: list) -> dict:
       - For specific transportation: Find me a train ticket from Bangalore to Mangalore on 19th March
       - For all transportation options: Find me all possible transportation from Bangalore to Mangalore on 19th March
       - When to use: When the user asks about transportation options
+      Note: if the input is like Note:if input is like Find me a bus from Mumbai to Bangalore on 26th March 2025 and a bus from Bangalore to Mumbai on 30th March 2025
+                              Then this should be considered as round trip.The input become Find me round trip from mumbai to bangalore on 26th march to 30th march.
 
     IMPORTANT: When a user asks to "Plan my trip" or any similar phrase indicating a complete travel plan, you must invoke ALL three functions, not just one.
 
@@ -118,7 +120,7 @@ def fun(text: str, chat_history: list) -> dict:
     '''
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
-    messages.extend(chat_history)
+    
     data = generate_text_with_conversation(messages, model=llm)
     print(data)
     data=extract_json(data)

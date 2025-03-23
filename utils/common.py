@@ -99,7 +99,9 @@ def hotel_url(Place_name):
 
     except Exception as e:
         print(f"Error: {e}")
-    place_input = driver.find_element(By.CSS_SELECTOR, "input.sc-ikkxIA.jLQbRg")
+        
+    place_input = driver.find_element(By.CSS_SELECTOR, ".sc-bXCLTC.huGkkH.fs-16.lh-24.fw-500")
+
     place_input.click()
     for i in Place_name:
         time.sleep(0.2)
@@ -110,7 +112,7 @@ def hotel_url(Place_name):
     place_input.send_keys(Keys.ENTER)
     # Click the element
     time.sleep(0.5)
-    button=driver.find_element(By.CSS_SELECTOR,"button.sc-cwHptR.kUQGPb")
+    button=driver.find_element(By.CSS_SELECTOR,".sc-fqkvVR.fyaBXE")
     button.click()
 
 

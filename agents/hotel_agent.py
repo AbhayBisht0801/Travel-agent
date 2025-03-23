@@ -33,7 +33,7 @@ llm = ChatCohere(cohere_api_key = api_key)
 
 def hotel_agent(text:str)->dict:
     """You are an agent who will suggest the hotels
-    if it is menctioned for one and no childrens are there then number of children take it as zero and age of children as zero"""
+    if it is mentioned for one and no childrens are there then number of children take it as zero and age of children as zero"""
     
     llm_with_tools = llm.bind_tools(tools=[hotel_data])
     
@@ -41,8 +41,8 @@ def hotel_agent(text:str)->dict:
     print('text is:',text)
     # Main execution
     messages = [SystemMessage(content='''
-    If it is mentioned for one person and no details about children are provided, 
-    assume `children: 0` and `children_age: 0`. Do not ask for missing details.
+        If it is mentioned for one person and no  other details mentioned consider it for one person
+                              Eg.Find me ticket for me .here it clearly means only for him that is for one person. Do not ask for missing details.
     '''),HumanMessage(content=text)]
 
     # Initial tool invocation

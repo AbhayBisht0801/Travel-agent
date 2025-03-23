@@ -64,7 +64,7 @@ def train_agent(text:str)->str:
     try:
         llm_with_tools = llm.bind_tools([check_train_station, scrape_train])
 
-        messages = [SystemMessage(content='''Return the output in a dictionary format. 
+        messages = [SystemMessage(content='''Note.Always use check_station to find the nearby station.
         If it is mentioned for one person and no  other details mentioned consider it for one person'''),HumanMessage(content=text)]
 
         res = llm_with_tools.invoke(messages)

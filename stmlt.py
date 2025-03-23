@@ -3,17 +3,9 @@ import os
 from langchain.prompts import ChatPromptTemplate,PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser 
 from langchain_core.messages import HumanMessage,AIMessage
-from langchain_ollama import OllamaLLM
 from langchain_core.output_parsers import StrOutputParser
-from sub_agents.ticketing_agent import ticketing_agent
-from agents.hotel_agent import hotel_agent
-from agents.travelguide_agent import tourist_guide
-from agents.train_agent import train_agent
-from agents.plane_scrape import plane_agent
-from agents.bus_agent import bus_agent
-from utils.tools import check_train_station, scrape_train, hotel_data
-from langchain_cohere import ChatCohere
-from langchain_ollama import OllamaLLM
+
+
 from langchain_core.messages import SystemMessage, HumanMessage,ToolMessage
 from utils.common import extract_json
 from main_agent import fun
@@ -23,7 +15,7 @@ st.set_page_config(page_title= 'Travel Agent',page_icon='✈️',layout="wide")
 left_col,space, right_col = st.columns([4,1,8])
 with left_col:
 
-  st.image("C:\\Users\\USER\\Downloads\\travel_agent.jpg", use_container_width=True)  
+  st.image("travel_agent.jpg", use_container_width=True)  
   st.markdown("<p style='color: white;font-size: 35px;font-weight: bold;margin-bottom: 1px;'>Travel Agency</p>", unsafe_allow_html=True)
   st.markdown("<p style='color: white;font-size: 25px;font-weight: bold;margin-top: 0px;'>Tune your journey with us</p>", unsafe_allow_html=True)
   st.write("<span style='color: white;font-size: 15px;'>Customise you travel experience with us</span>", unsafe_allow_html=True)
@@ -79,7 +71,7 @@ with right_col:
           st.markdown(user_query)
           
       with st.chat_message('AI Responce'):
-          response = fun(user_query,st.session_state.chat_history)
+          response = fun(user_query)
           st.write(response )
 
       st.session_state.chat_history.append(AIMessage(response))

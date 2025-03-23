@@ -9,4 +9,5 @@ from utils.tools import scrape_train
 from main_agent import fun
 print('Running')
 # print(fun('find me bus and train from mumbai to bangalore from 28th march'))
-print(ticketing_agent('Find me travels available from mumbai to mangalore on 20th april 2025'))
+# print(ticketing_agent('Find me travels available from mumbai to mangalore on 20th april 2025'))
+print(hotel_agent('Book  hotel for one person from 26th march to 30th mumbai '))

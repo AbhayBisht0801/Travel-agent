@@ -53,7 +53,7 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
     Note: *1*.round_ticket is TRUE only done when the input mentions it or if its a complete travel plan
     *2*.dates is list it has one date input if only one way ticket else its list containing two input one depature date and another return date.
     *3*.format of this date is dd-mm-yyyy
-    *4*.It can scrape data for both one way trip and round trip.
+    *4*.If a person mention both date of depature and day of return then its considered a round trip.
     *5* If  it returns  'No buses available' so dont call this tool again. 
     """
     
