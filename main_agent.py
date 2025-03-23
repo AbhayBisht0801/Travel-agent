@@ -38,7 +38,7 @@ def generate_text_with_conversation(messages, model):
     return response.strip()
 
 def main_agent_invoke_tools(tool_calls):
-  res = {}
+  res =''
 
   for tool_call in tool_calls.keys():
     # print(tool_call)
@@ -54,7 +54,7 @@ def main_agent_invoke_tools(tool_calls):
     elif tool_name == "tourist_guide":
         tool_output = tourist_guide(tool_args)  # Corrected function call
    
-    res[tool_name]=tool_output
+    res+=tool_output
     # print(f"Tool output for {tool_name}: {tool_output}")  # Debugging output
     # print('result is ',res)
   return res

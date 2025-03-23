@@ -40,7 +40,7 @@ def hotel_agent(text:str)->dict:
 
     print('text is:',text)
     # Main execution
-    messages = [SystemMessage(content='''Return the output in a dictionary format. 
+    messages = [SystemMessage(content='''
     If it is mentioned for one person and no details about children are provided, 
     assume `children: 0` and `children_age: 0`. Do not ask for missing details.
     '''),HumanMessage(content=text)]

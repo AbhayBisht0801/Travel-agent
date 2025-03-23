@@ -6,8 +6,8 @@ duckduckgo-search
 selenium
 pandas
 langchain-cohere
-piplangchain-core
+langchain-core
 python-dotenv
 langchain_ollama
+langchain-groq
 
-https://cloudinary-marketing-res.cloudinary.com/images/w_1000,c_scale/v1708450498/css_background_image_1/css_background_image_1-png?_i=AA.jpg

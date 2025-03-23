@@ -186,7 +186,7 @@ def check_train_station(departure:str, arrival:str)->tuple:
             """Fetch all train stations for a given city from trainspy.com."""
             service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
             driver = webdriver.Edge(service=service)
-            city= (city.replace('luru','lore') if city.endswith('luru') else city)
+            city= (city.replace('lore','luru') if city.endswith('lore') else city)
             
             try:
                 driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
@@ -409,7 +409,9 @@ def planning(arrival_date:str,departure_date:str,place:str)->str:
     except Exception as e:        
         return f"Error: {e}"
 @tool
-def combine_output(bus_data: str, train_data: str) -> dict:
+def combine_output(bus_data: str, train_data: str,plane_data:str) -> str:
+    """Input bus_data, train_data, plane_data as string and return the parsed output that can showed to the user
+    Note: input to this tool can also be one and other inputs will be empty string"""
     
     api_key = os.getenv('groq_api')
     llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
@@ -435,17 +437,24 @@ def combine_output(bus_data: str, train_data: str) -> dict:
     Departure: <Departure Time>
     Arrival: <Arrival Time>
     Coach: <coach> ₹<Price> (price) <seats awailable> (available)
+
     
 
     **Plane Details:**
-    <Plane Status>
+    Plane Name:<Plane Name>
+    Departure: <Departure Time>
+    Arrival: <Arrival Time>
+    Total Time:<Total Tima>
+    Price: ₹<Price>
+    Number of Stops:<Number of Stops>
 
     Please ensure the output follows this format exactly.
+    Note if any of Data Bus,Train or Plane is empty string ignore that data and  return the output for other in above respective format
     '''
 
     messages = [
         SystemMessage(content=prompt),
-        HumanMessage(content=f"Bus Data: {bus_data}\nTrain Data: {train_data}")
+        HumanMessage(content=f"Bus Data: {bus_data}\nTrain Data: {train_data}\n Plane Data:{plane_data}")
     ]
 
     chain = RunnablePassthrough() | llm 

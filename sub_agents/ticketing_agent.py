@@ -25,10 +25,11 @@ def ticketing_agent(text:str)->str:
 
 
     # Main execution
-    messages = [SystemMessage(content='''Return the final output in a dictionary format. 
+    messages = [SystemMessage(content='''always use combine_output tool after travel detail tools.
     If it is mentioned for one person and no  other details mentioned consider it for one person
     note: if it is menctioned that round trip or plan a trip then you have to find the trip for bus train and flight
-    note 2:After the execution of all the plane ,train and bus it should be displayed in a required systematic format'''),HumanMessage(content=text)]
+    note 2:After the execution of all the plane ,train and bus it should be displayed in a required systematic format
+    '''),HumanMessage(content=text)]
 
     # Initial tool invocation
     res = llm_with_tools.invoke(messages)

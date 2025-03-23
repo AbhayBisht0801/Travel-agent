@@ -19,7 +19,7 @@ def sub_agent_invoke_tools(tool_calls, messages):
             tool_output = bus_agent(tool_args)
         elif tool_name == "train_agent":
             tool_output = train_agent(tool_args)
-        elif tool_output=='combine_output':
+        elif tool_name=='combine_output':
             tool_output = combine_output(tool_args)
         else:
             continue  # Skip unknown tool calls
