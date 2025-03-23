@@ -35,7 +35,7 @@ available_actions = {
 def generate_text_with_conversation(messages, model):
     """Generate response from Ollama model."""
     response = model.invoke(messages)
-    return response.strip()
+    return response
 
 def main_agent_invoke_tools(tool_calls):
   res =''
@@ -61,7 +61,7 @@ def main_agent_invoke_tools(tool_calls):
 
     
 
-def fun(text: str)->dict:
+def fun(text: str, chat_history: list) -> dict:
     api_key = os.getenv('groq_api')
     llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
     prompt = '''You are a travel AI agent with three specialized functions.
@@ -118,6 +118,7 @@ def fun(text: str)->dict:
     '''
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
+    messages.extend(chat_history)
     data = generate_text_with_conversation(messages, model=llm)
     print(data)
     data=extract_json(data)
