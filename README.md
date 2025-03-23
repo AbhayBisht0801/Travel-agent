@@ -52,7 +52,7 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
 1) Bus Tickets:**RedBus**
 2) Train Tickets:**Confirmkt**
 3) Plane Tickets:**ClearTrip**
-4) Hotel Availablity::**ClearTrip**
+4) Hotel Availablity:**ClearTrip**
 
 ## Contributing
 Feel free to fork this repository and submit pull requests with improvements.
