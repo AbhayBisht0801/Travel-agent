@@ -14,6 +14,11 @@ TravelAI is an intelligent travel assistant that helps users find real-time tick
   - **Ticketing Agent:** Handles ticket availability searches.
   - **Hotel Agent:** Finds and suggests hotel accommodations.
   - **Tourist Agent:** Recommends tourist attractions.
+## Video Demo:
+
+
+https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
+
 
 ## Tech Stack
 - **Selenium:** Used for web scraping real-time data for tickets and hotels.
