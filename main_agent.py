@@ -117,6 +117,7 @@ def fun(text: str) -> dict:
     }
 
     For single-purpose requests, use only the relevant function.
+    if the adults and child are not menctioned in the query then you should consider adults and childs as 1.
     '''
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
