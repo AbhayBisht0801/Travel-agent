@@ -56,6 +56,6 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
 ## Contributing
 Feel free to fork this repository and submit pull requests with improvements.
 
-## License
-This project is licensed under the MIT License.
+## Note
+The speed of the agent might vary based on your system configuration
 
