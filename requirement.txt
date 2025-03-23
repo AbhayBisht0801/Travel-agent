@@ -11,3 +11,4 @@ python-dotenv
 langchain_ollama
 langchain-groq
 streamlit
+numpy 

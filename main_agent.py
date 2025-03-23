@@ -54,7 +54,7 @@ def main_agent_invoke_tools(tool_calls):
     elif tool_name == "tourist_guide":
         tool_output = tourist_guide(tool_args)  # Corrected function call
    
-    res+=tool_output
+    res+='\n'+tool_output
     # print(f"Tool output for {tool_name}: {tool_output}")  # Debugging output
     # print('result is ',res)
   return res

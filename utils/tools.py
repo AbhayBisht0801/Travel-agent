@@ -95,7 +95,6 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
 
     
 
-@tool
 def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list)->dict:
     '''It Returns the hotel available in the Place entered
     if there is no children keep children as 0 and num_children as empty list ->[]
@@ -107,8 +106,11 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
                 url=url+f'&ca1={i}'
         else:
             url
+    print(check_out)
     check_in_date=check_in.replace('-',"%2F")
     check_out_date=check_out.replace('-',"%2F")
+    print(check_out_date)
+    print(check_in_date)
     replacements = {
     "chk_in": check_in_date,
     "chk_out": check_out_date,
@@ -128,9 +130,8 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
         # Use the Edge WebDriver
         
-    edge_options = Options()
-    edge_options.add_argument("--headless")
-    driver = webdriver.Edge(service=service,options=edge_options)
+  
+    driver = webdriver.Edge(service=service)
 
     # Maximize the window
     driver.maximize_window()
@@ -139,31 +140,34 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
     driver.get(url)
 
    
-    hotel_details = WebDriverWait(driver, 10).until(
-    EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.sc-fPXMVe.bFeVmI"))
+    hotel_det = WebDriverWait(driver, 10).until(
+    EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.sc-aXZVg.gvuMKO.c-pointer.p-relative"))
 )
-    hotel_det=driver.find_elements(By.CSS_SELECTOR,'div.sc-aXZVg.gvuMKO.c-pointer.p-relative')
-    hotel_rating = [
-    hotel_det[i].text.split('\n')[1]
-    if hotel_det[i].text.split('\n')[1].replace('.', '', 1).isdigit() 
-    else np.nan 
-    for i in range(len(hotel_det))
-]    
-    hotel_name=[hotel_details[i].text for i in range(len(hotel_details)) if i%2==0]
-    hotel_type=[hotel_details[i].text.split('·')[0] for i in range(len(hotel_details)) if i%2!=0]
-    area_name=[hotel_details[i].text.split('·')[1] for i in range(len(hotel_details)) if i%2!=0]
-    price=driver.find_elements(By.CSS_SELECTOR,'p.sc-fqkvVR.dVmisQ')
-    
-    prices=[i.text for i in price]
-    print(prices)
-    data={'hotel_name':hotel_name,'price':prices,'area_name':area_name,'hotel_type':hotel_type,'hotel_rating':hotel_rating}
-    max_length = max(len(v) for v in data.values())
-    for key, value in data.items():
-        while len(value) < max_length:
-            value.append(np.nan) 
-    df=pd.DataFrame(data)
-    top_hotels=df.sort_values(by=['price','hotel_rating'],ascending=[True,False]).head(3)
-    
+    hotel_list = []
+    for hotel in hotel_det:
+        details = hotel.text.split('\n')  # Split text content by line breaks
+        name = details[0] if len(details) > 0 else "Unknown"
+        name= name.split('voucher')[0] if 'voucher' in name else name
+        rating = details[1] if len(details[1]) == 3 else "Not available"
+        
+        hotel_type_match = re.search(r"(\d+-star Hotel|Motel|Hotel)", hotel.text)
+        hotel_type = hotel_type_match.group(1) if hotel_type_match else "Not found"
+
+        # Extract place name
+        place_match = re.search(r"·\s*([\w\s]+)", hotel.text)
+        place_name = place_match.group(1).strip() if place_match else "Not found"
+        place_name = place_name.split('\n')[0] if '\n' in place_name else place_name
+
+        # Extract price details (Base price + Taxes)
+        price_match = re.search(r"(₹[\d,]+)\s*\+\s*(₹[\d,]+)", hotel.text)
+        base_price, taxes = price_match.groups() if price_match else ("Not found", "Not found")
+        
+        hotel_list.append({"Hotel Name": name, "Rating": rating,'hotel_type':hotel_type,'price':base_price,'taxes':taxes,'place_name':place_name})
+        df=pd.DataFrame(hotel_list)
+        df=df[df['Rating']!='Not available']
+
+        top_hotels=df.sort_values(by=['price','Rating'],ascending=[True,False]).head(3)
+        
 
 
 
