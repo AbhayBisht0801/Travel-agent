@@ -48,14 +48,16 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
 2. Enter your travel query in the input field.
 3. The AI agent will fetch and display ticket availability, hotel options, and tourist attractions in real-time.
 
-## Future Enhancements
-- Add support for international destinations.
-- Integrate additional travel APIs for better accuracy.
-- Implement a chatbot for real-time conversation.
+## Website Scraped
+1) Bus Tickets:**RedBus**
+2) Train Tickets:**Confirmkt**
+3) Plane Tickets:**ClearTrip**
+4) Hotel Availablity::**ClearTrip**
 
 ## Contributing
 Feel free to fork this repository and submit pull requests with improvements.
 
 ## Note
 The speed of the agent might vary based on your system configuration.
+
 
