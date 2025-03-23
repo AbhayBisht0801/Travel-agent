@@ -57,5 +57,5 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
 Feel free to fork this repository and submit pull requests with improvements.
 
 ## Note
-The speed of the agent might vary based on your system configuration
+The speed of the agent might vary based on your system configuration.
 
