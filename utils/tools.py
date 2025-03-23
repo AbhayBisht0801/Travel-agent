@@ -190,7 +190,7 @@ def check_train_station(departure:str, arrival:str)->tuple:
             """Fetch all train stations for a given city from trainspy.com."""
             service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
             driver = webdriver.Edge(service=service)
-            city= (city.replace('lore','luru') if city.endswith('lore') else city)
+            city= (city.replace('lore','luru') if city=="Mangalore" else city)
             
             try:
                 driver.get(f"https://trainspy.com/nearestrailwaystations/{city}")
@@ -428,7 +428,7 @@ def combine_output(bus_data: str, train_data: str,plane_data:str) -> str:
     - Format them into a well-structured text response.
     - If no data is available for a category, return "No data available".
 
-    ### **Output Format:**
+    # Output format:
     
     **Bus Details:**
     Bus Name: <Bus Name>

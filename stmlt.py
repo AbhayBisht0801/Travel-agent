@@ -80,7 +80,7 @@ with right_col:
           with st.spinner("Fetching The Details"):
               response = fun(user_query)
           
-              st.write(response )
+              st.markdown(response)
 
       st.session_state.chat_history.append(AIMessage(response))
 

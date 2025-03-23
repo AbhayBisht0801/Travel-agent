@@ -339,6 +339,7 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
 def airport_name(place):
     search_res = []
     for i in range(2):
+        time.sleep(1)
         try:
             search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
             search_res.append(search_result)
