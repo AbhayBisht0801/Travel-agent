@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.service import Service
+from langchain_groq import ChatGroq
 from selenium.webdriver.edge.options import Options
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.prompts import PromptTemplate
@@ -31,7 +32,8 @@ class Getting(TypedDict):
 
 
 def extract_json(data:str):
-  model = OllamaLLM(model='gemma2:2b')
+  api_key = os.getenv('groq_api')
+  model = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
   parser=  JsonOutputParser()
   template = PromptTemplate(
       template='give the functions from {data} \n {format_instruction}',
@@ -43,6 +45,57 @@ def extract_json(data:str):
   result = chain.invoke({'data': data})
   return result
 
+def format_outputs(result):
+    api_key = os.getenv('groq_api')
+    llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
+
+    prompt = """
+    The input given here is comming from the result of the agents 
+    your task is to format the result in required way 
+    result will have bus_agent, train_agent, plane_agent, Hotel_agent and tourist_guide outputs
+    then the output format should be as following
+
+    **Bus Details**
+    Bus Name: <>
+    Departure: <>
+    Arrival:<>
+    Price:<>
+    Website:<>
+
+    **Train Details**
+    Train Name:<>
+    Departure:<>
+    Arrival: <>
+    Class: <> <Price> <Availability>
+    Class: <> <Price> <Availability>
+    Website:<>
+
+    **Flight Details**
+    <Enter the data from the result as abouve>
+
+    **Hotel Details**
+    <>
+
+    **Tourist Places**
+    <>
+
+
+    These are the outputs
+    Note 1: where ever <> is menctioned you have to fill the relevant values you got from 'result'
+    Note 2: Data should be given in the output which you have got as a input No data should be given other sites
+    Note 3: Do not Hallucinate
+    Note 4: All the classes in a train should be one below the other do not show it seperately 
+    Note 4: If any details are not found either say 'No information available'.
+    """
+
+    messages = [SystemMessage(content=prompt), HumanMessage(content=result)]
+    prompt_template = ChatPromptTemplate.from_messages(messages)
+
+    chain = prompt_template | llm
+
+    resu = chain.invoke({"result": result})
+    
+    return resu.content
 
 
 def clean_train_details(text,chunk_size=3):

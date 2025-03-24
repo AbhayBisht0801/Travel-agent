@@ -5,7 +5,7 @@ from agents.train_agent import train_agent
 from agents.plane_scrape import plane_agent
 from agents.bus_agent import bus_agent
 from utils.tools import check_train_station, scrape_train, hotel_data
-from utils.common import extract_json
+from utils.common import extract_json,format_outputs
 from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnablePassthrough  
 from langchain_ollama import OllamaLLM
@@ -118,6 +118,7 @@ def fun(text: str) -> dict:
 
     For single-purpose requests, use only the relevant function.
     if the adults and child are not menctioned in the query then you should consider adults and childs as 1.
+    
     '''
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
@@ -140,14 +141,16 @@ def fun(text: str) -> dict:
             result[function_name] = function_text  # Store as key-value pair
     print(type(result))
     print(result)
-    print("Result is:", result)
+    # print("Result is:", result)
     
     res = main_agent_invoke_tools(result)
     print('final result is ',res)
+    res = format_outputs(res)
+    print(f"formated outputs are given below \n{res}")
     return res
-print(time.time()-t1)
-    
-if __name__== '__main__':
 
-  print(fun("find me round trip of train from mumbai to haridwar from 26 march 2025 and 30 march 2025 "))
+    
+# if __name__== '__main__':
+
+#   print(fun("find me round trip of train from mumbai to haridwar from 26 march 2025 and 30 march 2025 "))
 
