@@ -44,7 +44,7 @@ def bus_place(departure_place:str,arrival_place: str) -> str:
     
 
 
-
+@tool
 def bus_details(arrival_location:str,departure_location:str,date: list,round_trip:bool) ->dict :
     """Fetches available bus details between the given departure and arrival locations for the specified date and also return the url that the user check for other buses find other bus to plan the trip.
     Date should be of format dd-mm-yyyy.
@@ -94,7 +94,7 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
 
 
     
-
+@tool
 def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list)->dict:
     '''It Returns the hotel available in the Place entered
     if there is no children keep children as 0 and num_children as empty list ->[]
