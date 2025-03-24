@@ -44,9 +44,9 @@ def bus_place(departure_place:str,arrival_place: str) -> str:
     
 
 
-@tool
+
 def bus_details(arrival_location:str,departure_location:str,date: list,round_trip:bool) ->dict :
-    """Fetches available bus details between the given departure and arrival locations for the specified date.
+    """Fetches available bus details between the given departure and arrival locations for the specified date and also return the url that the user check for other buses find other bus to plan the trip.
     Date should be of format dd-mm-yyyy.
     If a personal asks for return ticket the departure _location becomes the arrival_location and the departure_location becomes the arrival_location
     This tool return the best bus both in terms of time and price.
@@ -79,7 +79,7 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
         for thread in threads:
             thread.join()
 
-        return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
+        return {'Departing ticket':departure_data[0],'Departing ticket url':departure_data[1], 'return_ticket':return_data[0],'return_ticket_url':return_data[1]}
         
 
 
@@ -87,9 +87,9 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
         url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
         url=re.sub('\d{2}-\d{2}-\d{4}',date[0],url)
         
-        data=bus_data(url=url)
+        data,url=bus_data(url=url)
         
-        return data
+        return data,{'bus_url':url}
                 
 
 
@@ -167,6 +167,8 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
         df=df[df['Rating']!='Not available']
 
         top_hotels=df.sort_values(by=['price','Rating'],ascending=[True,False]).head(3)
+        top_hotels['Hotel Name'].to_list()
+
         
 
 
@@ -251,7 +253,7 @@ def check_train_station(departure:str, arrival:str)->tuple:
         return 'Currently not able to scrape train data'
 @tool
 def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date:list, adults: str, child: str, infant: str,round_trip:bool) -> json:
-    """Scrapes flight details from Cleartrip based on input parameters.
+    """Scrapes flight details from Cleartrip based on input parameters and also return the website that the users can use to find other plane to plan the trip.
     take the airport code that is in (Code)
     date: Date of departure format ('dd/mm/yyyy) and return the best flights
     Return both the cheapest flight in terms of time and price
@@ -281,16 +283,16 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date:li
             thread.join()
         print(departure_data,return_data)
 
-        return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
+        return {'Departing ticket':departure_data[0],'departure_url':departure_data[1], 'return_ticket':return_data[0],'return_url':return_data[1]}
         
         
     else:
-        data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date[0])
-        return {'one way ticket':data}
+        data,plane_url=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date[0])
+        return {'one way ticket':data,'one_way_plane_url':plane_url}
    
 @tool
 def scrape_train(departure_station_code: str, arrival_station_code: str, dates:list,round_trip:bool) -> str:
-    """ Scrape trains from confirm it based on input parameters
+    """ Scrape trains from confirm it based on input parameters and return the website url so that to  find other train  to plan the trip.
     take the railway station code that is in the ( )
     
     Note:
@@ -302,8 +304,8 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, dates:l
     """
     try:
         if round_trip==False:
-            data=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=dates[0])
-            return {'one_way_trip':data}
+            data,train_url=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=dates[0])
+            return {'one_way_trip':data,'3one_way_train_url':train_url}
         else:
             departure_data = [None]
             return_data = [None]
@@ -323,7 +325,7 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, dates:l
             for thread in threads:
                 thread.join()
 
-            return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
+            return {'Departing ticket':departure_data[0],'Departing ticket link':departure_data[1], 'return_ticket':return_data[0], 'return_ticket_link':return_data[1]}
 
     except Exception as e:
         print('not able to fetch the train details at the movement')

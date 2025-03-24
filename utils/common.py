@@ -200,7 +200,7 @@ def bus_data(url):
 
 
                 # print(top_3)
-                return top_3.to_dict(orient='records')
+                return top_3.to_dict(orient='records'),url
             
 
         else:
@@ -255,7 +255,8 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
     driver = webdriver.Edge(service=service)
     
     try:
-        driver.get(f'https://www.cleartrip.com/flights/results?adults={adults}&childs={child}&infants={infant}&class=Economy&depart_date={date}&from={departure_airport_code}&to={arrival_airport_code}&intl=n')
+        url=f'https://www.cleartrip.com/flights/results?adults={adults}&childs={child}&infants={infant}&class=Economy&depart_date={date}&from={departure_airport_code}&to={arrival_airport_code}&intl=n'
+        driver.get(url)
         
         wait = WebDriverWait(driver, 15)
         plane_name = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'p.fw-500.fs-2.c-neutral-900')))
@@ -279,7 +280,7 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
         best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1).to_dict(orient='records')
         best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1).to_dict(orient='records')
         print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')
-        return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}'
+        return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time} and website link from where you look for other flights {url}'
 
     except Exception as e:
         return 'No plane tickets are available.'
@@ -294,7 +295,7 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
         train_details=[]
         
         driver = webdriver.Edge(service=service)
-        print(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
+        train_url=f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}'
         driver.get(f'https://www.confirmtkt.com/rbooking-d/trains/from/{departure_station_code}/to/{arrival_station_code}/{date_of_departure}')
         wait = WebDriverWait(driver, 15)
         train_rows = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'train')))
@@ -333,7 +334,7 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
         if len(train_det)==0:
             return 'No trains are available'
         else:
-            return train_det
+            return train_det,train_url
     except Exception as e:
         return f'No trains Available {e}'
 def airport_name(place):
@@ -395,6 +396,44 @@ def airport_name(place):
 
       
     return place_name[0]
+def get_hotel_url(url,hotel_name):
+    service = Service("msedgedriver.exe")
+
+    # Use the Edge WebDriver
+    edge_options = Options()
+    edge_options.add_argument("--headless")
+    driver = webdriver.Edge(service=service,options=edge_options)
+
+    # Maximize the window
+    driver.maximize_window()
+
+    # Open the desired website
+    driver.get(url)
+
+    # XPath for the hotel link
+    product_xpath = f"//div[contains(text(), '{hotel_name}')]"
+
+    # Wait until the hotel link is available and click on it
+    hotel_det = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, product_xpath))
+    )
+    hotel_det.click()
+
+    # Wait for the new page to load
+    time.sleep(2)
+
+    # Switch to the new tab if it opens in a new tab
+    window_handles = driver.window_handles
+    if len(window_handles) > 1:
+        driver.switch_to.window(window_handles[1])  # Switch to the new tab
+
+    # Get the current URL after switching
+    link = driver.current_url
+    
+
+    # Close the browser
+    driver.quit()
+    return link
 
 
     
