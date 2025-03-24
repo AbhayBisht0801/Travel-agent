@@ -51,7 +51,7 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
 3. The AI agent will fetch and display ticket availability, hotel options, and tourist attractions in real-time.
 
 ## Website Scraped
-1) Bus Tickets:**RedBus**
+1) Bus Tickets:**AbhiBus**
 2) Train Tickets:**Confirmkt**
 3) Plane Tickets:**ClearTrip**
 4) Hotel Availablity:**ClearTrip**
