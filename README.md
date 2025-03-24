@@ -39,6 +39,8 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
   COHERE_API_KEY=your_cohere_api_key
   grok_api=your_grok_api_key
   ```
+- Install Your Respective Edge webdriver from following link below based on your edge version
+  https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/?form=MA13LH
 
 ## Usage
 1. Run the Streamlit app:
