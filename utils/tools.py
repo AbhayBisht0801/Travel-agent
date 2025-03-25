@@ -453,6 +453,7 @@ def combine_output(bus_data: str, train_data: str,plane_data:str) -> str:
     Total Time:<Total Tima>
     Price: ₹<Price>
     Number of Stops:<Number of Stops>
+    Website Link: <url>
 
     Please ensure the output follows this format exactly.
     Note if any of Data Bus,Train or Plane is empty string ignore that data and  return the output for other in above respective format

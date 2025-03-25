@@ -9,6 +9,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.service import Service
 from langchain_groq import ChatGroq
+from langchain_core.messages import SystemMessage,HumanMessage
+from langchain.prompts import ChatPromptTemplate
 from selenium.webdriver.edge.options import Options
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.prompts import PromptTemplate
@@ -56,28 +58,28 @@ def format_outputs(result):
     then the output format should be as following
 
     **Bus Details**
-    Bus Name: <>
-    Departure: <>
-    Arrival:<>
-    Price:<>
-    Website:<>
+    Bus Name: <> \n
+    Departure: <> \n
+    Arrival:<> \n
+    Price:<> \n
+    Website:<> \n
 
-    **Train Details**
-    Train Name:<>
-    Departure:<>
-    Arrival: <>
-    Class: <> <Price> <Availability>
-    Class: <> <Price> <Availability>
-    Website:<>
+    **Train Details** \n
+    Train Name:<> \n
+    Departure:<> \n
+    Arrival: <> \n
+    Class: <> <Price> <Availability> \n
+    Class: <> <Price> <Availability> \n
+    Website:<> \n
 
-    **Flight Details**
-    <Enter the data from the result as abouve>
+    **Flight Details** \n
+    <Enter the data from the result as abouve> \n
 
-    **Hotel Details**
-    <>
+    **Hotel Details** \n
+    <> \n
 
-    **Tourist Places**
-    <>
+    **Tourist Places** \n
+    <>\n
 
 
     These are the outputs
@@ -96,6 +98,7 @@ def format_outputs(result):
     resu = chain.invoke({"result": result})
     
     return resu.content
+
 
 
 def clean_train_details(text,chunk_size=3):
@@ -252,7 +255,7 @@ def bus_data(url):
                 
 
 
-                # print(top_3)
+                print(url)
                 return top_3.to_dict(orient='records'),url
             
 
@@ -282,8 +285,8 @@ def bus_data(url):
                 
 
 
-                # print(top_3)
-                return top_3.to_dict(orient='records')
+                print(url)
+                return top_3.to_dict(orient='records'),url
             except Exception as e:
                 return 'No buses available'
     except Exception as e:

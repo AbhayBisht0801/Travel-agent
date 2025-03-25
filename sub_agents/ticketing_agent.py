@@ -17,8 +17,8 @@ api_key = os.getenv('CO_API_KEY')
 llm = ChatCohere(cohere_api_key = api_key)
 # llm=ChatCohere()
 
-
-def ticketing_agent(text:str)->str:
+@tool
+def ticketing_agent(text:str):
     '''you are an ticketting agent and find the details for bus train and flight. the final result to be shown is from combine_output 
     tool which returns the results from bus_agent,train_agent or plane_agent'''
     llm_with_tools = llm.bind_tools(tools=[bus_agent,train_agent,plane_agent,combine_output])
