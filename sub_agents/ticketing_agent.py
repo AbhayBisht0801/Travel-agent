@@ -47,7 +47,7 @@ def ticketing_agent(text:str):
         try:
             res = llm_with_tools.invoke(messages)
             res = res
-            print("The Training result is ",res)
+            
 
             
         except Exception as e:
