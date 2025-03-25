@@ -55,6 +55,7 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
     *3*.format of this date is dd-mm-yyyy
     *4*.If a person mention both date of depature and day of return then its considered a round trip.
     *5* If  it returns  'No buses available' so dont call this tool again. 
+    
     """
     
     # url=get_bus_url(departure_location,arrival_location)
@@ -78,18 +79,36 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
 
         for thread in threads:
             thread.join()
-
-        return {'Departing ticket':departure_data[0],'Departing ticket url':departure_data[1], 'return_ticket':return_data[0],'return_ticket_url':return_data[1]}
+        print('---------------')
+        print(len(departure_data))
+        print(type(departure_data))
+        print(departure_data)
+        if departure_data[0][0]==None and return_data[0][0]!=None:
         
+            return {'Departing ticket':'No bus available', 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
+        
+        elif departure_data[0][0]!=None and return_data[0][0]==None:
+            return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':'No bus available'}
+        elif departure_data[0][0]==None and return_data[0][0]==None:
+            return {'Departing ticket':'no bus available','return_ticket':'No bus available'}
+
+
+
+
+        else:
+            return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
 
 
     else:
         url=bus_url(departure_place=departure_location,arrival_place=arrival_location)
         url=re.sub('\d{2}-\d{2}-\d{4}',date[0],url)
+        try:
+            data,url=bus_data(url=url)
+            return data,{'bus_url':url}
+        except Exception as e:
+            return 'No buses available'
         
-        data,url=bus_data(url=url)
         
-        return data,{'bus_url':url}
                 
 
 
@@ -281,14 +300,27 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date:li
 
         for thread in threads:
             thread.join()
-        print(departure_data,return_data)
+        
+        if departure_data[0][0]==None and return_data[0][0]!=None:
+        
+            return {'Departing ticket':'No plane available', 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
+        
+        elif departure_data[0][0]!=None and return_data[0][0]==None:
+            return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':'No plane available'}
+        elif departure_data[0][0]==None and return_data[0][0]==None:
+            return {'Departing ticket':'no plane available','return_ticket':'No plane available'}
 
-        return {'Departing ticket':departure_data[0],'departure_url':departure_data[1], 'return_ticket':return_data[0],'return_url':return_data[1]}
-        
-        
+
+
+
+        else:
+            return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
     else:
-        data,plane_url=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date[0])
-        return {'one way ticket':data,'one_way_plane_url':plane_url}
+        try:
+            data,plane_url=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date[0])
+            return {'one way ticket':data,'one_way_plane_url':plane_url}
+        except Exception as e:
+            'No plane tickets available.'
    
 @tool
 def scrape_train(departure_station_code: str, arrival_station_code: str, dates:list,round_trip:bool) -> str:
@@ -299,13 +331,17 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, dates:l
     *1*.dates is list it has one date input if only one way ticket else its list containing two input one depature date and another return date.
     *2*.format of this date is dd-mm-yyyy
     *3*.It can scrape data for both one way trip and round trip.
+    *4*.it can find both departure and return ticket at a time if round_trip is true and dates take both departure and return date in list 
     
     return the best train in terms of price and travel time for day and night travel by considering the departure and the arrival station code
     """
     try:
         if round_trip==False:
-            data,train_url=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=dates[0])
-            return {'one_way_trip':data,'3one_way_train_url':train_url}
+            try:
+                data,train_url=train_data(departure_station_code=departure_station_code,arrival_station_code=arrival_station_code,date_of_departure=dates[0])
+                return {'one_way_trip':data,'one_way_train_url':train_url}
+            except Exception as e:
+                return {'one_way_trip':'No train available'}
         else:
             departure_data = [None]
             return_data = [None]
@@ -324,8 +360,24 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, dates:l
 
             for thread in threads:
                 thread.join()
+            
 
-            return {'Departing ticket':departure_data[0],'Departing ticket link':departure_data[1], 'return_ticket':return_data[0], 'return_ticket_link':return_data[1]}
+            if departure_data[0][0]==None and return_data[0][0]!=None:
+        
+                return {'Departing ticket':'No train available', 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
+        
+            elif departure_data[0][0]!=None and return_data[0][0]==None:
+                return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':'No train available'}
+            elif departure_data[0][0]==None and return_data[0][0]==None:
+                return {'Departing ticket':'no train available','return_ticket':'No train available'}
+
+
+
+
+            else:
+                return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
+
+                
 
     except Exception as e:
         print('not able to fetch the train details at the movement')

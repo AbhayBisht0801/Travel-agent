@@ -36,7 +36,7 @@ def plane_agent(text:str)->str:
     """The input should as below 
     Eg:
     find me a flight from mumbai to bangalore  on 5 March 2025 
-    Return the output from the tool as it is
+    Return the output of planes available and  website url for the user to check for other planes.
     """
     llm_with_tools = llm.bind_tools(tools=[check_airport, scrape_plane])
 
