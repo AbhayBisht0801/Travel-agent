@@ -87,7 +87,7 @@ def format_outputs(result):
     Note 2: Data should be given in the output which you have got as a input No data should be given other sites
     Note 3: Do not Hallucinate
     Note 4: All the classes in a train should be one below the other do not show it seperately 
-    Note 4: If any details are not found either say 'No information available'.
+    Note 4: If any details are not found Then just show the information available'.
     """
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=result)]
