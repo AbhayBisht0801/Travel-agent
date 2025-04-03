@@ -1,6 +1,7 @@
 import re
 import time
 import json
+import ast
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.service import Service
@@ -33,27 +34,33 @@ class Getting(TypedDict):
   agent_input : Annotated[list[str],"this should output the string which should be the input for the agents"]
 
 
+# def extract_json(data:str):
+#   api_key = os.getenv('groq_api')
+#   model = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
+#   parser=  JsonOutputParser()
+#   template = PromptTemplate(
+#       template='give the functions from {data} \n {format_instruction}',
+#       input_variables=['data'],
+#       partial_variables={'format_instruction': parser.get_format_instructions()}
+#   )
+
+#   chain = template | model | parser
+#   result = chain.invoke({'data': data})
+#   return result
 def extract_json(data:str):
-  api_key = os.getenv('groq_api')
-  model = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
-  parser=  JsonOutputParser()
-  template = PromptTemplate(
-      template='give the functions from {data} \n {format_instruction}',
-      input_variables=['data'],
-      partial_variables={'format_instruction': parser.get_format_instructions()}
-  )
+    json_str = data.strip().replace("```json", "").replace("```", "").strip()
+     # Debugging: Ensure JSON format is correct
+    final_result = json.loads(json_str)
+    return final_result
 
-  chain = template | model | parser
-  result = chain.invoke({'data': data})
-  return result
 
-def format_outputs(result):
+def format_outputs(result,user_input):
     api_key = os.getenv('groq_api')
     llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
 
-    prompt = """
-    The input given here is comming from the result of the agents 
-    your task is to format the result in required way 
+    prompt = f"""
+    The input given here is comming from the result of the agents and also have  {user_input}
+    your task is to format the result in required way.if {user_input} ask is for specific thing then only return it. 
     result will have bus_agent, train_agent, plane_agent, Hotel_agent and tourist_guide outputs
     then the output format should be as following
 
@@ -80,14 +87,14 @@ def format_outputs(result):
 
     **Tourist Places** \n
     <>\n
-
+    
 
     These are the outputs
     Note 1: where ever <> is menctioned you have to fill the relevant values you got from 'result'
     Note 2: Data should be given in the output which you have got as a input No data should be given other sites
     Note 3: Do not Hallucinate
     Note 4: All the classes in a train should be one below the other do not show it seperately 
-    Note 4: If any details are not found Then just show the information available'.
+    Note 4: If any details are not found Then just show the information available do not show the other things '.
     """
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=result)]
@@ -285,12 +292,13 @@ def bus_data(url):
                 
 
 
-                print(url)
+                
+                print(top_3.to_dict(orient='records'))
                 return top_3.to_dict(orient='records'),url
             except Exception as e:
-                return 'No buses available'
+                return None,None
     except Exception as e:
-            return 'No buses available'
+            return None,None
 
 
         
@@ -339,7 +347,7 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
         return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time} and website link from where you look for other flights {url}'
 
     except Exception as e:
-        return 'No plane tickets are available.'
+        return None,None
     
     finally:
         driver.quit()
@@ -388,11 +396,11 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
         driver.quit()    
         train_det=available_ticket_check(train_det)
         if len(train_det)==0:
-            return 'No trains are available'
+            return None,None
         else:
             return train_det,train_url
     except Exception as e:
-        return f'No trains Available {e}'
+        return None,None
 def airport_name(place):
     search_res = []
     for i in range(2):

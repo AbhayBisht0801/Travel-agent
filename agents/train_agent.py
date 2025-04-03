@@ -59,13 +59,16 @@ def train_agent(text:str)->str:
     """The input should as below 
     Eg:
     find me a train from mumbai to bangalore  on 5 March 2025 
-    This tool returns all the train details
+    This tool returns  the output of planes available and  website url for the user to check for other trains.
     """
     try:
         llm_with_tools = llm.bind_tools([check_train_station, scrape_train])
 
-        messages = [SystemMessage(content='''Note.Always use check_station to find the nearby station.
-        If it is mentioned for one person and no  other details mentioned consider it for one person'''),HumanMessage(content=text)]
+        messages = [SystemMessage(content='''Note: 1.Always use check_station to find the nearby station.
+        If it is mentioned for one person and no  other details mentioned consider it for one person.
+                                  2.take round_trip True in  scrape train with both departure and return date when round trip metioned in human message.
+         
+                                  '''),HumanMessage(content=text)]
 
         res = llm_with_tools.invoke(messages)
 

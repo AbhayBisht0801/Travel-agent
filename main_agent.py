@@ -93,6 +93,7 @@ def fun(text: str) -> dict:
     Question: Plan my trip from Bangalore to Mangalore from 19/3/2025 to 22/3/2025
     Thought: This is a complete trip planning request, so I need to use all three functions to provide transportation, accommodation, and sightseeing options.
     Action: 
+    ```json
     {
       "functions": [
         {
@@ -115,10 +116,11 @@ def fun(text: str) -> dict:
         }
       ]
     }
+    ```
 
     For single-purpose requests, use only the relevant function.
-    if the adults and child are not menctioned in the query then you should consider adults and childs as 1.
-    
+    if the adults and child are not mentioned in the query then you should consider adults and childs as 1.
+    Note: only return json final output
     '''
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=text)]
@@ -145,12 +147,12 @@ def fun(text: str) -> dict:
     
     res = main_agent_invoke_tools(result)
     print('final result is ',res)
-    res = format_outputs(res)
+    res = format_outputs(res,'find me round trip of train from mumbai to haridwar from 26 march 2025 and 30 march 2025')
     print(f"formated outputs are given below \n{res}")
     return res
 
     
-# if __name__== '__main__':
+if __name__== '__main__':
 
-#   print(fun("find me round trip of train from mumbai to haridwar from 26 march 2025 and 30 march 2025 "))
+  print(fun("find me round trip of bus from mumbai to haridwar from 26 march 2025 and 30 march 2025 "))
 
