@@ -2,8 +2,10 @@ import re
 import time
 import json
 import ast
+import asyncio
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -23,10 +25,14 @@ from langchain_community.tools import DuckDuckGoSearchRun
 search = DuckDuckGoSearchRun()
 from langchain_ollama import OllamaLLM
 from dotenv import load_dotenv
+from selenium.common.exceptions import (
+    TimeoutException, NoSuchElementException, StaleElementReferenceException
+)
 load_dotenv()
 api_key = os.getenv('CO_API_KEY')
 
-llm= ChatCohere(cohere_api_key = api_key)
+api_key = os.getenv('groq_api')
+llm = ChatGroq(model="qwen-2.5-32b", api_key=api_key) 
 
 
 class Getting(TypedDict):
@@ -347,7 +353,7 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
         return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time} and website link from where you look for other flights {url}'
 
     except Exception as e:
-        return None,None
+        return 'Not able to scrape flights currently'
     
     finally:
         driver.quit()
@@ -408,6 +414,7 @@ def airport_name(place):
         try:
             search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
             search_res.append(search_result)
+            print(search_res[0])
            
             
         except Exception as e:
@@ -425,14 +432,15 @@ def airport_name(place):
                     2) Just return city name and district  not additional_details
                 """)  
 
-    result=response.content.split(':')[1:]
-    print(result)
-    
-    result=[i.split('\n')[0].strip().replace('*','')  for i in result]
+    result=response.content.split('\n')
+    result = [i for i in result if i != '']
+
+
    
     result=[i.replace('luru','lore') if i.endswith('luru') else i for i in result]
+
     result = [i.strip() for i in result if i != '']
-    result=['Bengaluru'   if i=='Bangalore' else i for i in result ]
+    result=['Bengaluru'   if i.lower()=='bangalore' else i for i in result ]
     
     
     service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
@@ -460,44 +468,88 @@ def airport_name(place):
 
       
     return place_name[0]
-def get_hotel_url(url,hotel_name):
+async def get_hotel_url(url, hotel_name):
     service = Service("msedgedriver.exe")
-
-    # Use the Edge WebDriver
-    edge_options = Options()
-    edge_options.add_argument("--headless")
-    driver = webdriver.Edge(service=service,options=edge_options)
-
-    # Maximize the window
+    driver = webdriver.Edge(service=service)
     driver.maximize_window()
-
-    # Open the desired website
     driver.get(url)
 
-    # XPath for the hotel link
     product_xpath = f"//div[contains(text(), '{hotel_name}')]"
+    link = None
+    max_scrolls = 20
+    scroll_pause = 1
+    found = False
 
-    # Wait until the hotel link is available and click on it
-    hotel_det = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, product_xpath))
-    )
-    hotel_det.click()
+    try:
+        for i in range(max_scrolls):
+            try:
+                # Wait until element is present in the DOM
+                WebDriverWait(driver, 3).until(
+                    EC.presence_of_element_located((By.XPATH, product_xpath))
+                )
+                # Re-locate the element and click
+                element = driver.find_element(By.XPATH, product_xpath)
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+                time.sleep(0.5)  # Let scroll settle
+                element.click()
+                found = True
+                break
+            except (NoSuchElementException, TimeoutException, StaleElementReferenceException):
+                # Scroll down a bit and retry
+                driver.execute_script("window.scrollBy(0, 500);")
+                time.sleep(scroll_pause)
 
-    # Wait for the new page to load
-    time.sleep(2)
+        if found:
+            time.sleep(2)  # Wait for navigation/tab open
+            window_handles = driver.window_handles
+            if len(window_handles) > 1:
+                driver.switch_to.window(window_handles[1])
+            link = driver.current_url
+        else:
+            print("Hotel not found after scrolling.")
+    except Exception as e:
+        print("Error occurred:", e)
+    finally:
+        driver.quit()
 
-    # Switch to the new tab if it opens in a new tab
-    window_handles = driver.window_handles
-    if len(window_handles) > 1:
-        driver.switch_to.window(window_handles[1])  # Switch to the new tab
-
-    # Get the current URL after switching
-    link = driver.current_url
-    
-
-    # Close the browser
-    driver.quit()
     return link
+def find_and_book_flight(url,target_flight_number):
+    service = Service(os.getenv("EDGE_DRIVER_PATH", r"msedgedriver.exe"))
+    options = webdriver.EdgeOptions()
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    driver = webdriver.Edge(service=service, options=options)
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
-
+    url = url
+    driver.get(url)
     
+    wait = WebDriverWait(driver, 15)
+    flight_blocks = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[data-testid="tupple"]')))
+    
+    for block in flight_blocks:
+        try:
+            flight_number = block.find_element(By.CSS_SELECTOR, 'p.fs-1.c-neutral-400.pt-1').text.strip()
+            if flight_number == target_flight_number:
+                print(flight_number)
+                book_button = block.find_element(By.XPATH, ".//button[text()='Book']")
+                actions = ActionChains(driver)
+                actions.move_to_element(book_button).perform()
+                time.sleep(random.uniform(1, 3))
+                book_button.click()
+                print(f"Clicked Book for flight {target_flight_number}")
+                time.sleep(10)
+                window_handles = driver.window_handles
+                if len(window_handles) > 1:
+                    driver.switch_to.window(window_handles[1])
+                time.sleep(3)
+                link = driver.current_url
+                driver.quit()
+                return link
+        except Exception as e:
+            print("Skipping block due to error:", e)
+
+    driver.quit()
+    return None
+    
+        
+        

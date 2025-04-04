@@ -147,7 +147,7 @@ def fun(text: str) -> dict:
     
     res = main_agent_invoke_tools(result)
     print('final result is ',res)
-    res = format_outputs(res,'find me round trip of train from mumbai to haridwar from 26 march 2025 and 30 march 2025')
+    res = format_outputs(res,text)
     print(f"formated outputs are given below \n{res}")
     return res
 

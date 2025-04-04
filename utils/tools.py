@@ -2,6 +2,8 @@ from langchain_core.tools import tool
 from langchain_cohere import ChatCohere
 from langchain_community.tools import DuckDuckGoSearchRun
 from selenium import webdriver
+import asyncio
+ 
 from utils.common import bus_url
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
@@ -11,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnablePassthrough
-from utils.common import hotel_url
+from utils.common import hotel_url,get_hotel_url
 import pandas as pd
 import numpy as np
 from selenium.webdriver.common.keys import Keys
@@ -113,7 +115,7 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
 
 
     
-@tool
+
 def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list)->dict:
     '''It Returns the hotel available in the Place entered
     if there is no children keep children as 0 and num_children as empty list ->[]
@@ -186,9 +188,15 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
         df=df[df['Rating']!='Not available']
 
         top_hotels=df.sort_values(by=['price','Rating'],ascending=[True,False]).head(3)
-        top_hotels['Hotel Name'].to_list()
-
-        
+        hotel_names=top_hotels['Hotel Name'].to_list()
+    async def hotel_url_wrapper():
+        result=await asyncio.gather(get_hotel_url(url=url,hotel_name=hotel_names[0]),
+                                                  get_hotel_url(url=url,hotel_name=hotel_names[1]),
+                                                                get_hotel_url(url=url,hotel_name=hotel_names[2]))
+        return result
+    results = asyncio.run(hotel_url_wrapper())
+    print(results)
+    
 
 
 
@@ -301,24 +309,14 @@ def scrape_plane(departure_airport_code: str, arrival_airport_code: str, date:li
         for thread in threads:
             thread.join()
         
-        if departure_data[0][0]==None and return_data[0][0]!=None:
         
-            return {'Departing ticket':'No plane available', 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
-        
-        elif departure_data[0][0]!=None and return_data[0][0]==None:
-            return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':'No plane available'}
-        elif departure_data[0][0]==None and return_data[0][0]==None:
-            return {'Departing ticket':'no plane available','return_ticket':'No plane available'}
 
-
-
-
-        else:
-            return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
+        print(type(departure_data))
+        return {'Departing ticket':departure_data[0], 'return_ticket':return_data[0]}
     else:
         try:
-            data,plane_url=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date[0])
-            return {'one way ticket':data,'one_way_plane_url':plane_url}
+            data=plane_data(adults=adults,departure_airport_code=departure_airport_code,arrival_airport_code=arrival_airport_code,child=child,infant=infant,date=date[0])
+            return {'one way ticket':data}
         except Exception as e:
             'No plane tickets available.'
    
@@ -367,14 +365,16 @@ def scrape_train(departure_station_code: str, arrival_station_code: str, dates:l
                 return {'Departing ticket':'No train available', 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
         
             elif departure_data[0][0]!=None and return_data[0][0]==None:
+                
                 return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':'No train available'}
             elif departure_data[0][0]==None and return_data[0][0]==None:
                 return {'Departing ticket':'no train available','return_ticket':'No train available'}
-
+                
 
 
 
             else:
+                
                 return {'Departing ticket':departure_data[0][0],'Departing ticket url':departure_data[0][1], 'return_ticket':return_data[0][0],'return_ticket_url':return_data[0][1]}
 
                 

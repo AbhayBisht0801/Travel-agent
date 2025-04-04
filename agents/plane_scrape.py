@@ -29,7 +29,31 @@ search = DuckDuckGoSearchRun()
 
 
 
+def invoke_tools(tool_calls, messages):
+    for tool_call in tool_calls:
+        print('problem here')
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
 
+
+        if tool_name == "check_airport":
+
+            tool_output = check_airport.invoke(tool_args)
+            messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+        
+
+        elif tool_name == "scrape_plane":
+            print(tool_args)
+            # Ensure numeric values are converted to strings if needed.
+            tool_args["adults"] = str(tool_args["adults"])
+            tool_args["child"] = str(tool_args["child"])
+            tool_args["infant"] = str(tool_args["infant"])
+            
+            # Call the tool using .invoke() with a single dictionary argument
+            tool_output = scrape_plane.invoke(tool_args)
+            messages.append(ToolMessage(name=tool_name, content=tool_output, tool_call_id=tool_call["id"]))
+       
+    return messages
 # Bind tools to LLM
 @tool
 def plane_agent(text:str)->str:
@@ -42,8 +66,9 @@ def plane_agent(text:str)->str:
 
 
 # Main execution
-    messages = [SystemMessage(content='''Return the final output in a dictionary format. 
-    If it is mentioned for one person and no  other details mentioned consider it for one person
+    messages = [SystemMessage(content='''You are plane agent that returns plane details.
+            Note:
+                              If it is mentioned for one person and no  other details mentioned consider it for one person.
                               Eg.Find me ticket for me .here it clearly means only for him that is for one person.'''),
                               HumanMessage(content=text)]
 
@@ -59,4 +84,5 @@ def plane_agent(text:str)->str:
             
         except Exception as e:
             print("An error occurred during LLM invocation:", str(e))
+    print(res.content)
     return res.content
