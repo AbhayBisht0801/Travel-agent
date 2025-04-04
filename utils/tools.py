@@ -111,8 +111,8 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
             return 'No buses available'
         
         
-                
-
+          
+      
 
     
 
@@ -191,8 +191,8 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
         hotel_names=top_hotels['Hotel Name'].to_list()
     async def hotel_url_wrapper():
         result=await asyncio.gather(get_hotel_url(url=url,hotel_name=hotel_names[0]),
-                                                  get_hotel_url(url=url,hotel_name=hotel_names[1]),
-                                                                get_hotel_url(url=url,hotel_name=hotel_names[2]))
+                                    get_hotel_url(url=url,hotel_name=hotel_names[1]),
+                                    get_hotel_url(url=url,hotel_name=hotel_names[2]))
         return result
     results = asyncio.run(hotel_url_wrapper())
     print(results)
