@@ -115,7 +115,7 @@ def bus_details(arrival_location:str,departure_location:str,date: list,round_tri
       
 
     
-
+@tool
 def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str,num_childrens:int,children_age:list)->dict:
     '''It Returns the hotel available in the Place entered
     if there is no children keep children as 0 and num_children as empty list ->[]
@@ -162,12 +162,14 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
 
    
     hotel_det = WebDriverWait(driver, 10).until(
-    EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.sc-aXZVg.gvuMKO.c-pointer.p-relative"))
-)
+    EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.sc-aXZVg.gvuMKO.c-pointer.p-relative")))
+    print([i.text for i in hotel_det])
     hotel_list = []
     for hotel in hotel_det:
-        details = hotel.text.split('\n')  # Split text content by line breaks
+        details = hotel.text.split('\n')
+  # Split text content by line breaks
         name = details[0] if len(details) > 0 else "Unknown"
+
         name= name.split('voucher')[0] if 'voucher' in name else name
         rating = details[1] if len(details[1]) == 3 else "Not available"
         
@@ -184,18 +186,38 @@ def hotel_data(Place_name:str,num_adult:int,rooms:int,check_in:str,check_out:str
         base_price, taxes = price_match.groups() if price_match else ("Not found", "Not found")
         
         hotel_list.append({"Hotel Name": name, "Rating": rating,'hotel_type':hotel_type,'price':base_price,'taxes':taxes,'place_name':place_name})
-        df=pd.DataFrame(hotel_list)
-        df=df[df['Rating']!='Not available']
 
-        top_hotels=df.sort_values(by=['price','Rating'],ascending=[True,False]).head(3)
-        hotel_names=top_hotels['Hotel Name'].to_list()
-    async def hotel_url_wrapper():
-        result=await asyncio.gather(get_hotel_url(url=url,hotel_name=hotel_names[0]),
-                                    get_hotel_url(url=url,hotel_name=hotel_names[1]),
-                                    get_hotel_url(url=url,hotel_name=hotel_names[2]))
-        return result
-    results = asyncio.run(hotel_url_wrapper())
-    print(results)
+    df=pd.DataFrame(hotel_list)
+    print(df)
+    df=df[df['Rating']!='Not available']
+
+    top_hotels=df.sort_values(by=['price','Rating'],ascending=[True,False]).head(3)
+    
+    hotel_names=top_hotels['Hotel Name'].to_list()
+    
+    url_hotel1=[None]
+    url_hotel2=[None]
+    url_hotel3=[None]
+    def url_wrapper(url,hotel_name,result_holder):
+            result = get_hotel_url(url=url,hotel_name=hotel_name)
+            result_holder[0] = result
+    
+    threads = [
+        threading.Thread(target=url_wrapper, args=(url,hotel_names[0],url_hotel1)),
+        threading.Thread(target=url_wrapper, args=(url,hotel_names[1],url_hotel2)),
+        threading.Thread(target=url_wrapper, args=(url,hotel_names[2],url_hotel3)),
+
+    ]
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+    hotel_urls=[url_hotel1,url_hotel2,url_hotel3]
+    top_hotels['url']=hotel_urls
+        
+
     
 
 

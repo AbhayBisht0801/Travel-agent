@@ -2,7 +2,7 @@ import re
 import time
 import json
 import ast
-import asyncio
+import random
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -468,7 +468,7 @@ def airport_name(place):
 
       
     return place_name[0]
-async def get_hotel_url(url, hotel_name):
+def get_hotel_url(url, hotel_name):
     service = Service("msedgedriver.exe")
     driver = webdriver.Edge(service=service)
     driver.maximize_window()
