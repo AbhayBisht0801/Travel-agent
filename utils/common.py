@@ -459,7 +459,7 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
 def airport_name(place):
     search_res = []
     for i in range(2):
-        time.sleep(1)
+        time.sleep(2)
         try:
             search_result = search.invoke(f"which nearest wellknown  city and district name of the  {place} is in?")
             search_res.append(search_result)
@@ -479,13 +479,16 @@ def airport_name(place):
                 
                 Note: 1)return the city name in city and district name in district and not state name instead
                     2) Just return city name and district  not additional_details
-                    3) The result should be in the json format
+                    3) return the output in  dictionary output:
+                    ```json
                     "city_name":"city","district_name":"district"
+                    ```
                 """)  
-    print("the given response is\n:",response)
+    result=extract_json(response.content)
+    result=[value for value in result.values()]
 
-    result=response.content.split('\n')
-    result = [i for i in result if i != '']
+
+ 
 
 
    
