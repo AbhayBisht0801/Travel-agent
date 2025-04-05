@@ -66,7 +66,7 @@ def plane_agent(text:str)->str:
 
 
 # Main execution
-    messages = [SystemMessage(content='''You are plane agent that returns plane details.
+    messages = [SystemMessage(content='''You are plane agent that returns plane details.return the plane details with their respective url and provide the main url through which user can refer for other flights.
             Note:
                               If it is mentioned for one person and no  other details mentioned consider it for one person.
                               Eg.Find me ticket for me .here it clearly means only for him that is for one person.'''),
