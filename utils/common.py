@@ -4,6 +4,7 @@ import json
 import ast
 import random
 from selenium import webdriver
+import threading
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.edge.service import Service
@@ -330,6 +331,7 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
         
         wait = WebDriverWait(driver, 15)
         plane_name = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'p.fw-500.fs-2.c-neutral-900')))
+        plane_number =driver.find_elements(By.CSS_SELECTOR,'p.fs-1.c-neutral-400.pt-1')
 
         total_time = driver.find_elements(By.CSS_SELECTOR, "p.m-0.fs-2.fw-400.c-neutral-400.ta-center.lh-copy")
         arrival_departure_time = driver.find_elements(By.CSS_SELECTOR, 'p.m-0.fs-5.fw-400.c-neutral-900')
@@ -338,6 +340,7 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
 
         data = {
             "Plane Name": [i.text for i in plane_name],
+            "Plane_number":[i.text for i in plane_number],
             "Total Time": [i.text for i in total_time],
             "Arrival Time": [arrival_departure_time[i].text for i in range(0, len(arrival_departure_time), 2)],
             "Departure Time": [arrival_departure_time[i].text for i in range(1, len(arrival_departure_time), 2)],
@@ -347,13 +350,49 @@ def plane_data(adults,child,infant,date,departure_airport_code,arrival_airport_c
         df=pd.DataFrame(data)
         print(df)
         df=df[df['Plane Name']!='']
-        best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1).to_dict(orient='records')
-        best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1).to_dict(orient='records')
-        print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')
-        return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time} and website link from where you look for other flights {url}'
+        best_flight_by_time=df.sort_values(by='Total Time',ascending=True).head(1)
+        best_flight_by_price=df.sort_values(by='Ticket Price',ascending=True).head(1)
+        print(best_flight_by_price['Plane_number'].values[0])
+        print(type(best_flight_by_price['Plane_number'].values[0]))
+        if best_flight_by_price['Plane_number'].values[0]==best_flight_by_time['Plane_number'].values[0]:
+            plane_urls=find_and_book_flight(url=url,target_flight_number=best_flight_by_price['Plane_number'].values[0])
+            best_flight_by_price['url']=plane_urls
+            best_flight_by_time['url']=plane_urls
+            best_flight_by_price=best_flight_by_price.to_dict(orient='records')
+            best_flight_by_time=best_flight_by_time.to_dict(orient='records')
+            print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')
+            return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time} and website link from where you look for other flights {url}'
+
+        else:
+            best_flight_by_time_url = [None]
+            best_flight_by_price_url = [None]
+
+            def plane_data_wrapper(url,Plane_number,result_holder):
+                result = find_and_book_flight(url,Plane_number)
+                result_holder[0] = result
+
+            threads = [
+                threading.Thread(target=plane_data_wrapper, args=(url,best_flight_by_price['Plane_number'].values[0],best_flight_by_time_url)),
+                threading.Thread(target=plane_data_wrapper, args=(url,best_flight_by_time['Plane_number'].values[0],best_flight_by_price_url))
+            ]
+            for thread in threads:
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+            best_flight_by_time['url']=best_flight_by_time_url[0]
+            best_flight_by_price['url']=best_flight_by_price_url[0]
+            print(best_flight_by_price,best_flight_by_time)
+            best_flight_by_time=best_flight_by_time.to_dict(orient='records')
+            best_flight_by_price=best_flight_by_price.to_dict(orient='records')
+
+
+
+            print(f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time}')
+            return f'best flight in terms of price {best_flight_by_price} and best flight in terms of quickest {best_flight_by_time} and website link from where you look for other flights {url}'
 
     except Exception as e:
-        return 'Not able to scrape flights currently'
+        return e
     
     finally:
         driver.quit()
@@ -537,13 +576,14 @@ def find_and_book_flight(url,target_flight_number):
                 time.sleep(random.uniform(1, 3))
                 book_button.click()
                 print(f"Clicked Book for flight {target_flight_number}")
-                time.sleep(10)
+                
                 window_handles = driver.window_handles
                 if len(window_handles) > 1:
                     driver.switch_to.window(window_handles[1])
                 time.sleep(3)
                 link = driver.current_url
                 driver.quit()
+                print(link)
                 return link
         except Exception as e:
             print("Skipping block due to error:", e)
