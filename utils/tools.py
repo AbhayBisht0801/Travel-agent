@@ -530,9 +530,9 @@ def combine_output(bus_data: str, train_data: str,plane_data:str) -> str:
     Website Link: <url>
 
     Please ensure the output follows this format exactly.
-    Note if any of Data Bus,Train or Plane is empty string ignore that data and  return the output for other in above respective format
-    '''
-
+    Note 1: if any of Data Bus,Train or Plane is empty string ignore that data and  return the output for other in above respective format
+    note 2: if the result is only for bus then return only bus do not give anything else'''
+    
     messages = [
         SystemMessage(content=prompt),
         HumanMessage(content=f"Bus Data: {bus_data}\nTrain Data: {train_data}\n Plane Data:{plane_data}")
@@ -541,4 +541,5 @@ def combine_output(bus_data: str, train_data: str,plane_data:str) -> str:
     chain = RunnablePassthrough() | llm 
     result = chain.invoke(messages)  
     print(type(result))
+    print("the combined output result is:\n",result)
     return result.content

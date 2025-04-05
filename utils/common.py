@@ -101,7 +101,16 @@ def format_outputs(result,user_input):
     Note 2: Data should be given in the output which you have got as a input No data should be given other sites
     Note 3: Do not Hallucinate
     Note 4: All the classes in a train should be one below the other do not show it seperately 
-    Note 4: If any details are not found Then just show the information available do not show the other things '.
+    Note 4: If any details are not found Then just show the information available do not show the other things
+    Note 5: if bus details you did not receive or it was not asked to show then dont show anything in output just provide what is awailable
+    for example:
+         if input is bus_agent_result and plane_agent_agent
+         then output should be
+         bus details:\n
+         <>
+         flight details:\n
+         <>
+
     """
 
     messages = [SystemMessage(content=prompt), HumanMessage(content=result)]
@@ -446,6 +455,7 @@ def train_data(departure_station_code,arrival_station_code,date_of_departure):
             return train_det,train_url
     except Exception as e:
         return None,None
+        
 def airport_name(place):
     search_res = []
     for i in range(2):
@@ -469,7 +479,10 @@ def airport_name(place):
                 
                 Note: 1)return the city name in city and district name in district and not state name instead
                     2) Just return city name and district  not additional_details
+                    3) The result should be in the json format
+                    "city_name":"city","district_name":"district"
                 """)  
+    print("the given response is\n:",response)
 
     result=response.content.split('\n')
     result = [i for i in result if i != '']
