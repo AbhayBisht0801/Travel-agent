@@ -49,6 +49,8 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
    ```
 2. Enter your travel query in the input field.
 3. The AI agent will fetch and display ticket availability, hotel options, and tourist attractions in real-time.
+## Flow Daigram
+![_- visual selection (1) (1)](https://github.com/user-attachments/assets/fec2d491-47f6-429f-9c45-867130080180)
 
 ## Website Scraped
 1) Bus Tickets:**AbhiBus**
