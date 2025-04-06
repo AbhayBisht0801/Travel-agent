@@ -45,7 +45,7 @@ https://github.com/user-attachments/assets/50454b51-3fe8-4bb2-a0b8-19ec4852cdd9
 ## Usage
 1. Run the Streamlit app:
    ```bash
-   streamlit run app.py
+   streamlit run stmlt.py
    ```
 2. Enter your travel query in the input field.
 3. The AI agent will fetch and display ticket availability, hotel options, and tourist attractions in real-time.
